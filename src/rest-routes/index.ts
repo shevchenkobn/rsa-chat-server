@@ -57,3 +57,10 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
   saveKeysForUser(req.user, foreignPublicKey, rsaPair, true);
 
 }) as Handler);
+
+/**
+ * Chat
+ */
+router.post('/chat', ...authMiddlewares, ((req, res, next) => {
+  // TODO: connect to chat
+}) as Handler);

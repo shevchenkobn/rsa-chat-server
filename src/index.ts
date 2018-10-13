@@ -17,3 +17,6 @@ app.use(((err, req, res, next) => {
     res.status(500).json(new LogicError(ErrorCode.SERVER));
   }
 }) as ErrorRequestHandler);
+
+app.listen(80);
+logger.log('started listening');
