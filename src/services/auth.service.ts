@@ -1,19 +1,20 @@
 import * as jwt from 'jsonwebtoken';
+import { verify } from 'jsonwebtoken';
 import { User } from './user.class';
 import { jwtConfig } from '../config/config';
 import { storage } from './user-storage.service';
-import { ErrorRequestHandler, Handler, Request } from 'express';
+import { ErrorRequestHandler, Handler } from 'express';
 import * as expressJwt from 'express-jwt';
 import { ErrorCode, LogicError } from './errors.service';
 import { logger } from './logger.service';
-import { ErrorHandleFunction } from 'connect';
+import { IncomingMessage } from 'http';
 
 export function createToken(user: User) {
   return jwt.sign({ id: user.name}, jwtConfig.secret);
 }
 
 export function getUserFromPayload(obj: any) {
-  if (typeof obj !== 'object' || !('id' in obj)) {
+  if (obj instanceof Object || !('id' in obj)) {
     throw new LogicError(ErrorCode.AUTH_NO);
   }
   const name: string = obj.id;
@@ -31,3 +32,29 @@ export const authMiddlewares: ReadonlyArray<Handler | ErrorRequestHandler> = [
     next();
   }) as Handler,
 ];
+
+function getJWTPayload(httpReq: IncomingMessage) {
+  const authParts = (httpReq.headers.authorization as string)
+    .split(spaces);
+  if (authParts.length !== 2 || tokenSchemeRegex.test(authParts[0])) {
+    return null;
+  }
+
+  let payload;
+  try {
+    payload = verify(authParts[1], jwtConfig.secret);
+  } catch (err) {
+    logger.error(err);
+    return null;
+  }
+  return payload;
+}
+
+export function getUserFromHTTPRequest(request: IncomingMessage) {
+  const payload = getJWTPayload(request);
+
+  if (payload instanceof Object && 'id' in (payload as Object)) {
+    return storage.get((payload as any).id);
+  }
+  throw new LogicError(ErrorCode.AUTH_NO);
+}

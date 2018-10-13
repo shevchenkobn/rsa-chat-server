@@ -13,7 +13,7 @@ export const router = Router();
  */
 router.post('/auth', (req, res, next) => {
   if (
-    typeof req.body !== 'object'
+    req.body instanceof Object
     || req.body.username !== 'string'
     || !req.body.username.trim()
   ) {

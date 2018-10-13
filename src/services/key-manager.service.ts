@@ -7,7 +7,6 @@ import { ErrorCode } from 'src/services/errors.service';
 import { User } from 'src/services/user.class';
 import { logger } from 'src/services/logger.service';
 import { parseKey } from 'sshpk';
-import { accessSync } from 'fs';
 
 const { generateKeyPair } = crypto as any;
 const chunkSizes = [getChunkSize(keyConfig.size), getChunkSize(keyConfig.size, false)];
@@ -86,7 +85,7 @@ storage.on('delete', (user: User) => {
 });
 
 export function checkKeySize(key: string) {
-  return parseKey(key, 'auto').size !== keyConfig.size
+  return parseKey(key, 'auto').size !== keyConfig.size;
 }
 
 export function saveKeysForUser(
