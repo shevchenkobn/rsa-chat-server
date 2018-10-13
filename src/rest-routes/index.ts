@@ -8,7 +8,9 @@ import { checkKeySize, generateKeys, saveKeysForUser } from '../services/key-man
 
 export const router = Router();
 
-// Authorization
+/**
+ * Authorization
+ */
 router.post('/auth', (req, res, next) => {
   if (
     typeof req.body !== 'object'
@@ -30,7 +32,9 @@ router.delete('/auth', ...authMiddlewares, ((req, res, next) => {
   res.json({});
 }) as Handler);
 
-// Keys
+/**
+ * Keys
+ */
 router.get('/key/info', (req, res) => {
   res.json(keyConfig);
 });
