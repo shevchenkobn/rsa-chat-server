@@ -4,7 +4,8 @@ export class User {
   readonly name: string;
   protected _encryptKey: string;
   protected _decryptKeys: string;
-  protected _updatedAt: Date;
+  protected _updatedAt: number;
+  protected _lastLoggedIn: number;
 
   get encryptKey() {
     if (this._encryptKey) {
@@ -24,6 +25,10 @@ export class User {
     return this._updatedAt;
   }
 
+  get lastLoggedIn() {
+    return new Date(this._lastLoggedIn);
+  }
+
   constructor(name: string, encryptKey = '', decryptKey = '') {
     if (!name.trim()) {
       throw new LogicError(ErrorCode.AUTH_EMPTY_NAME);
@@ -31,7 +36,8 @@ export class User {
     this.name = name;
     this._encryptKey = encryptKey;
     this._decryptKeys = decryptKey;
-    this._updatedAt = new Date();
+    this._updatedAt = Date.now();
+    this._lastLoggedIn = this._updatedAt;
   }
 
   hasKeys() {
@@ -48,7 +54,7 @@ export class User {
 
     this._decryptKeys = decryptKey;
     this._encryptKey = encryptKey;
-    this._updatedAt = new Date();
+    this._updatedAt = Date.now();
 
     return this._updatedAt;
   }
@@ -56,8 +62,13 @@ export class User {
   deleteKeys() {
     this._decryptKeys = '';
     this._encryptKey = '';
-    this._updatedAt = new Date();
+    this._updatedAt = Date.now();
 
     return this._updatedAt;
+  }
+
+  logIn() {
+    this._lastLoggedIn = Date.now();
+    return this._lastLoggedIn;
   }
 }

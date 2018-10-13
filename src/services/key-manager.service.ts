@@ -7,6 +7,7 @@ import { ErrorCode } from 'src/services/errors.service';
 import { User } from 'src/services/user.class';
 import { logger } from 'src/services/logger.service';
 import { parseKey } from 'sshpk';
+import { accessSync } from 'fs';
 
 const { generateKeyPair } = crypto as any;
 const chunkSizes = [getChunkSize(keyConfig.size), getChunkSize(keyConfig.size, false)];
@@ -84,12 +85,26 @@ storage.on('delete', (user: User) => {
   scheduledExpirations.delete(user.name);
 });
 
-export function saveKeysForUser(userName: string, serverKeys: RsaKey, foreignPublicKey: string) {
-  if (parseKey(foreignPublicKey, 'auto').size !== keyConfig.size) {
+export function checkKeySize(key: string) {
+  return parseKey(key, 'auto').size !== keyConfig.size
+}
+
+export function saveKeysForUser(
+  userNameOrUser: string | User,
+  foreignPublicKey: string,
+  serverKeys: RsaKey,
+  foreignerChecked = false,
+) {
+  if (
+    !foreignerChecked
+    && parseKey(foreignPublicKey, 'auto').size !== keyConfig.size
+  ) {
     throw new LogicError(ErrorCode.KEY_SIZE);
   }
 
-  const user = storage.get(userName);
+  const user = typeof userNameOrUser === 'string'
+    ? storage.get(userNameOrUser)
+    : userNameOrUser;
   user.updateKeys(foreignPublicKey, serverKeys.privateKey);
   return user;
 }

@@ -27,12 +27,14 @@ export const storage = new class extends EventEmitter {
     return user;
   }
 
-  remove(name: string): User {
-    const user = map.get(name);
+  delete(nameOrUser: string | User): User {
+    const user = typeof nameOrUser === 'string'
+      ? map.get(nameOrUser)
+      : nameOrUser;
     if (!user) {
       throw new LogicError(ErrorCode.AUTH_NO);
     }
-    map.delete(name);
+    map.delete(user.name);
     this.emit('deleted', user);
     return user;
   }

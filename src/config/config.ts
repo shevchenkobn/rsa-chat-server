@@ -7,3 +7,7 @@ export const keyConfig = {
     format: 'pem',
   },
 };
+
+export const jwtConfig = {
+  secret: 'This is my rsa server',
+};
