@@ -1,7 +1,22 @@
 {
   "name": "rsa-chat-server",
   "version": "0.0.1",
+  "engines": {
+    "node": "^10.12"
+  },
+  "scripts": {
+    "npm:g:dev": "sudo npm i rimraf typescript -g -D",
+    "build": "rimraf ./dist && tsc",
+    "start": "npm run build && node ./dist"
+  },
   "dependencies": {
-    
+    "express": "^4.16.4",
+    "sshpk": "^1.15.1",
+    "ws": "^6.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.16.0",
+    "@types/sshpk": "^1.10.3",
+    "@types/ws": "^6.0.1"
   }
 }
