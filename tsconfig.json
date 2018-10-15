@@ -25,6 +25,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "newLine": "lf",
+//    "noEmitHelpers": false,
     "noEmitOnError": true,
     "noErrorTruncation": true,
     "noFallthroughCasesInSwitch": false,

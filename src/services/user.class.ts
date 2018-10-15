@@ -3,7 +3,7 @@ import { ErrorCode, LogicError } from './errors.service';
 export class User {
   readonly name: string;
   protected _encryptKey: string;
-  protected _decryptKeys: string;
+  protected _decryptKey: string;
   protected _updatedAt: number;
   protected _lastLoggedIn: number;
 
@@ -14,8 +14,8 @@ export class User {
     return this._encryptKey;
   }
 
-  get decryptKeys() {
-    if (this._decryptKeys) {
+  get decryptKey() {
+    if (this._decryptKey) {
       throw new LogicError(ErrorCode.KEY_BAD);
     }
     return this._encryptKey;
@@ -35,13 +35,13 @@ export class User {
     }
     this.name = name;
     this._encryptKey = encryptKey;
-    this._decryptKeys = decryptKey;
+    this._decryptKey = decryptKey;
     this._updatedAt = Date.now();
     this._lastLoggedIn = this._updatedAt;
   }
 
   hasKeys() {
-    return !!this._encryptKey && !!this._decryptKeys;
+    return !!this._encryptKey && !!this._decryptKey;
   }
 
   updateKeys(encryptKey: string, decryptKey: string) {
@@ -52,7 +52,7 @@ export class User {
       throw new LogicError(ErrorCode.KEY_BAD, 'Bad decrypt key');
     }
 
-    this._decryptKeys = decryptKey;
+    this._decryptKey = decryptKey;
     this._encryptKey = encryptKey;
     this._updatedAt = Date.now();
 
@@ -60,7 +60,7 @@ export class User {
   }
 
   deleteKeys() {
-    this._decryptKeys = '';
+    this._decryptKey = '';
     this._encryptKey = '';
     this._updatedAt = Date.now();
 

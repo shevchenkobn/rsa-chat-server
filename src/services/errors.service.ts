@@ -1,12 +1,15 @@
 export enum ErrorCode {
-    SERVER = 'SERVER',
+  SERVER = 'SERVER',
 
-    AUTH_NO = 'AUTH_NO',
-    AUTH_EMPTY_NAME = 'AUTH_EMPTY_NAME',
-    AUTH_DUPLICATE_NAME = 'AUTH_DUPLICATE_NAME',
+  AUTH_NO = 'AUTH_NO',
+  AUTH_EMPTY_NAME = 'AUTH_EMPTY_NAME',
+  AUTH_DUPLICATE_NAME = 'AUTH_DUPLICATE_NAME',
 
-    KEY_BAD = 'KEY_BAD',
-    KEY_SIZE = 'KEY_SIZE',
+  KEY_BAD = 'KEY_BAD',
+  KEY_SIZE = 'KEY_SIZE',
+
+  // WebSockets only
+  MSG_BAD = 'MSG_BAD',
 }
 
 export class LogicError extends Error {

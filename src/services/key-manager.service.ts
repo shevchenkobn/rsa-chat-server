@@ -8,7 +8,7 @@ import { User } from 'src/services/user.class';
 import { logger } from 'src/services/logger.service';
 import { parseKey } from 'sshpk';
 
-const { generateKeyPair } = crypto as any;
+const generateKeyPair = (crypto as any).generateKeyPair;
 const chunkSizes = [getChunkSize(keyConfig.size), getChunkSize(keyConfig.size, false)];
 
 function getChunkSize(keyBits: number, forSourceText = true) {
@@ -59,28 +59,46 @@ export function decrypt(key: string, buffer: Buffer, encoding = 'utf8') {
   return Buffer.concat(buffers).toString(encoding);
 }
 
-const scheduledExpirations = new Map<string, NodeJS.Timeout>();
+export type KeyExpiredCallback = (user: User) => void;
+const scheduledExpirations = new Map<string, [NodeJS.Timeout, KeyExpiredCallback?]>();
 
-function scheduleExpiration(userName: string) {
+export function scheduleExpiration(userName: string, callback?: KeyExpiredCallback) {
   if (scheduledExpirations.has(userName)) {
     throw new LogicError(ErrorCode.SERVER);
   }
   const timeout = setTimeout(() => {
-    storage.get(userName).deleteKeys();
+    const user = storage.get(userName);
+    user.deleteKeys();
     scheduledExpirations.delete(userName);
     // FIXME: maybe not needed
     clearTimeout(timeout);
+
+    const callback = scheduledExpirations.get(userName)![1];
+    if (callback) {
+      callback(user);
+    }
   }, keyConfig.expireTime);
+  scheduledExpirations.set(userName, [timeout, callback]);
+}
+
+export function setExpirationCallback(userName: string, callback?: KeyExpiredCallback) {
+  const scheduled = scheduledExpirations.get(userName);
+  if (!scheduled) {
+    logger.warn(`No scheduled key removal for ${userName}`);
+    return;
+  }
+
+  scheduled[1] = callback;
 }
 
 storage.on('delete', (user: User) => {
-  const timeout = scheduledExpirations.get(user.name);
-  if (!timeout) {
+  const scheduled = scheduledExpirations.get(user.name);
+  if (!scheduled) {
     logger.warn(`No scheduled key removal for ${user}`);
     return;
   }
 
-  clearTimeout(timeout);
+  clearTimeout(scheduled[0]);
   scheduledExpirations.delete(user.name);
 });
 

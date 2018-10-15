@@ -10,7 +10,7 @@ import { logger } from './logger.service';
 import { IncomingMessage } from 'http';
 
 export function createToken(user: User) {
-  return jwt.sign({ id: user.name}, jwtConfig.secret);
+  return jwt.sign({ id: user.name }, jwtConfig.secret);
 }
 
 export function getUserFromPayload(obj: any) {
@@ -32,6 +32,9 @@ export const authMiddlewares: ReadonlyArray<Handler | ErrorRequestHandler> = [
     next();
   }) as Handler,
 ];
+
+const tokenSchemeRegex = /^Bearer$/;
+const spaces = /^\s+/;
 
 function getJWTPayload(httpReq: IncomingMessage) {
   const authParts = (httpReq.headers.authorization as string)
