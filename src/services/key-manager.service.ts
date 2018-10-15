@@ -62,45 +62,97 @@ export function decrypt(key: string, buffer: Buffer, encoding = 'utf8') {
 export type KeyExpiredCallback = (user: User) => void;
 const scheduledExpirations = new Map<string, [NodeJS.Timeout, KeyExpiredCallback?]>();
 
-export function scheduleExpiration(userName: string, callback?: KeyExpiredCallback) {
-  if (scheduledExpirations.has(userName)) {
-    throw new LogicError(ErrorCode.SERVER);
-  }
-  const timeout = setTimeout(() => {
-    const user = storage.get(userName);
-    user.deleteKeys();
-    scheduledExpirations.delete(userName);
-    // FIXME: maybe not needed
-    clearTimeout(timeout);
+export const keyExpiration = {
+  has(userName: string) {
+    return scheduledExpirations.has(userName);
+  },
 
-    const callback = scheduledExpirations.get(userName)![1];
-    if (callback) {
-      callback(user);
+  schedule(userName: string, callback?: KeyExpiredCallback) {
+    if (scheduledExpirations.has(userName)) {
+      throw new LogicError(ErrorCode.SERVER);
     }
-  }, keyConfig.expireTime);
-  scheduledExpirations.set(userName, [timeout, callback]);
-}
+    const timeout = setTimeout(() => {
+      const user = storage.get(userName);
+      user.deleteKeys();
+      scheduledExpirations.delete(userName);
+      // FIXME: maybe not needed
+      clearTimeout(timeout);
 
-export function setExpirationCallback(userName: string, callback?: KeyExpiredCallback) {
-  const scheduled = scheduledExpirations.get(userName);
-  if (!scheduled) {
-    logger.warn(`No scheduled key removal for ${userName}`);
-    return;
-  }
+      const callback = scheduledExpirations.get(userName)![1];
+      if (callback) {
+        callback(user);
+      }
+    }, keyConfig.expireTime);
+    scheduledExpirations.set(userName, [timeout, callback]);
+  },
 
-  scheduled[1] = callback;
-}
+  delete(userName: string) {
+    const scheduled = scheduledExpirations.get(userName);
+    if (!scheduled) {
+      logger.warn(`No scheduled key removal for ${userName}`);
+      return;
+    }
 
-storage.on('delete', (user: User) => {
-  const scheduled = scheduledExpirations.get(user.name);
-  if (!scheduled) {
-    logger.warn(`No scheduled key removal for ${user}`);
-    return;
-  }
+    clearTimeout(scheduled[0]);
+    scheduledExpirations.delete(userName);
+  },
 
-  clearTimeout(scheduled[0]);
-  scheduledExpirations.delete(user.name);
-});
+  hasCallback(userName: string) {
+    const scheduled = scheduledExpirations.get(userName);
+    return !!(scheduled && scheduled[1]);
+  },
+
+  setCallback(userName: string, callback: KeyExpiredCallback) {
+    const scheduled = scheduledExpirations.get(userName);
+    if (!scheduled) {
+      logger.warn(`No scheduled key removal for ${userName}`);
+      return;
+    }
+
+    scheduled[1] = callback;
+  },
+
+  deleteCallback(userName: string) {
+    const scheduled = scheduledExpirations.get(userName);
+    if (!scheduled) {
+      logger.warn(`No scheduled key removal for ${userName}`);
+      return;
+    }
+
+    scheduled[1] = undefined;
+  },
+};
+
+storage.on('delete', (user: User) => keyExpiration.delete(user.name));
+
+// export function scheduleExpiration(userName: string, callback?: KeyExpiredCallback) {
+//   if (scheduledExpirations.has(userName)) {
+//     throw new LogicError(ErrorCode.SERVER);
+//   }
+//   const timeout = setTimeout(() => {
+//     const user = storage.get(userName);
+//     user.deleteKeys();
+//     scheduledExpirations.delete(userName);
+//     // FIXME: maybe not needed
+//     clearTimeout(timeout);
+//
+//     const callback = scheduledExpirations.get(userName)![1];
+//     if (callback) {
+//       callback(user);
+//     }
+//   }, keyConfig.expireTime);
+//   scheduledExpirations.set(userName, [timeout, callback]);
+// }
+//
+// export function setExpirationCallback(userName: string, callback?: KeyExpiredCallback) {
+//   const scheduled = scheduledExpirations.get(userName);
+//   if (!scheduled) {
+//     logger.warn(`No scheduled key removal for ${userName}`);
+//     return;
+//   }
+//
+//   scheduled[1] = callback;
+// }
 
 export function checkKeySize(key: string) {
   return parseKey(key, 'auto').size !== keyConfig.size;
@@ -110,10 +162,10 @@ export function saveKeysForUser(
   userNameOrUser: string | User,
   foreignPublicKey: string,
   serverKeys: RsaKey,
-  foreignerChecked = false,
+  foreignChecked = false,
 ) {
   if (
-    !foreignerChecked
+    !foreignChecked
     && parseKey(foreignPublicKey, 'auto').size !== keyConfig.size
   ) {
     throw new LogicError(ErrorCode.KEY_SIZE);

@@ -2,11 +2,10 @@ import { EventHandler, MessageHub } from './message-hub.class';
 import {
   decrypt,
   encrypt,
-  scheduleExpiration,
-  setExpirationCallback,
-} from '../src/services/key-manager.service';
-import { ErrorCode, LogicError } from '../src/services/errors.service';
-import { logger } from '../src/services/logger.service';
+  keyExpiration,
+} from '../services/key-manager.service';
+import { ErrorCode, LogicError } from '../services/errors.service';
+import { logger } from '../services/logger.service';
 
 export const subscribers = new Map<string, EventHandler>([
   ['message-sent', (client, hub, encryptedMsg: string) => {
@@ -23,9 +22,15 @@ export const emitters = new Map<string, EventHandler>([
   }],
 
   ['client-created', (client, hub) => {
-    scheduleExpiration(client.user.name, () => {
-      client.emit('key-outdated', {});
-    });
+    if (!keyExpiration.has(client.user.name)) {
+      keyExpiration.schedule(client.user.name, () => {
+        client.emit('key-outdated', {});
+      });
+    } else {
+      keyExpiration.setCallback(client.user.name, () => {
+        client.emit('key-outdated', {});
+      });
+    }
   }],
 
   ['user-joined', (currClient, hub, newClient: MessageHub.Client) => {
@@ -41,7 +46,7 @@ export const emitters = new Map<string, EventHandler>([
   }],
 
   ['client-disposed', (client, hub) => {
-    setExpirationCallback(client.user.name, undefined);
+    keyExpiration.deleteCallback(client.user.name);
   }],
 
   ['error', (currClient, hub, err: Error) => {

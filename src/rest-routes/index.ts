@@ -4,7 +4,12 @@ import { authMiddlewares, createToken } from '../services/auth.service';
 import { storage } from '../services/user-storage.service';
 import { User } from '../services/user.class';
 import { keyConfig } from '../config/config';
-import { checkKeySize, generateKeys, saveKeysForUser } from '../services/key-manager.service';
+import {
+  checkKeySize,
+  generateKeys,
+  keyExpiration,
+  saveKeysForUser,
+} from '../services/key-manager.service';
 
 export const router = Router();
 
@@ -52,15 +57,19 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
   if (!checkKeySize(foreignPublicKey)) {
     throw new LogicError(ErrorCode.KEY_SIZE);
   }
+
+  if (keyExpiration.has(req.user.name)) {
+    keyExpiration.delete(req.user.name);
+  }
+
   const rsaPair = await generateKeys();
 
   saveKeysForUser(req.user, foreignPublicKey, rsaPair, true);
-
 }) as Handler);
 
 /**
  * Chat
  */
-router.post('/chat', ...authMiddlewares, ((req, res, next) => {
-  // TODO: connect to chat
-}) as Handler);
+// router.post('/chat', ...authMiddlewares, ((req, res, next) => {
+//   // TODO: connect to chat
+// }) as Handler);

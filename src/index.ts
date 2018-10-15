@@ -4,6 +4,8 @@ import { ErrorCode, LogicError } from './services/errors.service';
 import { logger } from './services/logger.service';
 import { ErrorRequestHandler } from 'express';
 import { router } from './rest-routes';
+import { MessageHub } from './ws/message-hub.class';
+import { emitters, subscribers } from './ws/event-handlers';
 
 const app = express();
 
@@ -18,5 +20,7 @@ app.use(((err, req, res, next) => {
   }
 }) as ErrorRequestHandler);
 
-app.listen(80);
+const httpServer = app.listen(80);
+const wsServer = new MessageHub(httpServer, subscribers, emitters, '/chat');
+
 logger.log('started listening');

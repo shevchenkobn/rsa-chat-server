@@ -1,12 +1,10 @@
 import { Server as HttpServer } from 'http';
 import * as ws from 'websocket';
-import { ErrorCode, LogicError } from '../src/services/errors.service';
-import { getUserFromHTTPRequest } from '../src/services/auth.service';
+import { ErrorCode, LogicError } from '../services/errors.service';
+import { getUserFromHTTPRequest } from '../services/auth.service';
 import { parse } from 'url';
-import { User } from '../src/services/user.class';
-import { logger } from '../src/services/logger.service';
-
-export const CHAT_PATH = '/chat';
+import { User } from '../services/user.class';
+import { logger } from '../services/logger.service';
 
 export type EventHandler = (
   (client: MessageHub.Client, messageHub: MessageHub, ...args: any[]) => void
@@ -23,6 +21,7 @@ export class MessageHub {
   ];
 
   readonly server: ws.server;
+  readonly chatPath: string;
   readonly httpServer: HttpServer;
   readonly subscribeEvents: MessageHandlers;
   readonly emitEvents: MessageHandlers;
@@ -32,6 +31,7 @@ export class MessageHub {
     httpServer: HttpServer,
     subscribeEvents: MessageHandlers,
     emitEvents: MessageHandlers,
+    chatPath = '',
   ) {
     if (subscribeEvents.size === 0 || emitEvents.size === 0) {
       throw new Error('No events to manipulate found');
@@ -46,6 +46,7 @@ export class MessageHub {
     this.httpServer = httpServer;
     this.subscribeEvents = subscribeEvents;
     this.emitEvents = subscribeEvents;
+    this.chatPath = chatPath;
     this.server = new ws.server({
       httpServer,
     });
@@ -55,7 +56,7 @@ export class MessageHub {
 
     this.server.on('request', (request) => {
       const url = request.httpRequest.url;
-      if (!url || parse(url).pathname !== CHAT_PATH) {
+      if (!url || parse(url).pathname !== chatPath) {
         request.reject(404);
         return;
       }
