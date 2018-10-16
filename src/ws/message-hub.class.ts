@@ -9,6 +9,7 @@ import { logger } from '../services/logger.service';
 export type EventHandler = (
   (client: MessageHub.Client, messageHub: MessageHub, ...args: any[]) => void
 );
+// import MessageHandlers = ReadonlyMap<string, EventHandler>;
 export type MessageHandlers = ReadonlyMap<string, EventHandler>;
 
 export class MessageHub {
@@ -31,7 +32,7 @@ export class MessageHub {
     httpServer: HttpServer,
     subscribeEvents: MessageHandlers,
     emitEvents: MessageHandlers,
-    chatPath = '',
+    chatPath = '/',
   ) {
     if (subscribeEvents.size === 0 || emitEvents.size === 0) {
       throw new Error('No events to manipulate found');
@@ -74,6 +75,7 @@ export class MessageHub {
       const client = new MessageHub.Client(connection, user);
       this.emitEvents.get('client-created')!(client, this);
       this.broadcast('user-joined', [], client);
+      logger.log(`Client ${client.user.name} connected`);
       clients.push(client);
 
       connection.on('error', (err) => {
@@ -82,7 +84,7 @@ export class MessageHub {
         } catch (err) {
           logger.info('Error notification doesn\'t work');
         }
-        logger.error(`Connection ${connection} is about to close due to ${err}`);
+        logger.error(`Connection ${client.user.name} is about to close due to ${err}`);
       });
 
       connection.on('message', (data) => {
@@ -97,7 +99,7 @@ export class MessageHub {
           handler!(client, this);
         } catch (err) {
           this.emitEvents.get('error')!(client, this, new LogicError(ErrorCode.MSG_BAD));
-          console.error(err);
+          console.error(`Error for ${client.user.name}:\nERROR: ${err}`);
         }
       });
 
@@ -105,7 +107,7 @@ export class MessageHub {
         clients.splice(clients.indexOf(client), 1);
         this.broadcast('user-left', [], client);
         this.emitEvents.get('client-disposed')!(client, this);
-        logger.log(`Disonnected ${connection} because of ${reason} (${desc})`);
+        logger.log(`Disonnected ${client.user.name} because of ${reason} (${desc})`);
       });
     });
   }

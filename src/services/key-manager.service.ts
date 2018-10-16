@@ -1,11 +1,11 @@
 import * as crypto from 'crypto';
 import { privateDecrypt, publicEncrypt } from 'crypto';
-import { keyConfig } from 'src/config/config';
-import { storage } from 'src/services/user-storage.service';
-import { LogicError } from 'src/services/errors.service';
-import { ErrorCode } from 'src/services/errors.service';
-import { User } from 'src/services/user.class';
-import { logger } from 'src/services/logger.service';
+import { keyConfig } from '../config/config';
+import { storage } from './user-storage.service';
+import { LogicError } from './errors.service';
+import { ErrorCode } from './errors.service';
+import { User } from './user.class';
+import { logger } from './logger.service';
 import { parseKey } from 'sshpk';
 
 const generateKeyPair = (crypto as any).generateKeyPair;

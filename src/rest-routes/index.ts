@@ -4,6 +4,7 @@ import { authMiddlewares, createToken } from '../services/auth.service';
 import { storage } from '../services/user-storage.service';
 import { User } from '../services/user.class';
 import { keyConfig } from '../config/config';
+import { logger } from '../services/logger.service';
 import {
   checkKeySize,
   generateKeys,
@@ -14,15 +15,23 @@ import {
 export const router = Router();
 
 /**
+ * Ping
+ */
+router.get('/status', (req, res) => {
+  res.status(200).json({});
+});
+
+/**
  * Authorization
  */
 router.post('/auth', (req, res, next) => {
   if (
-    req.body instanceof Object
-    || req.body.username !== 'string'
+    !(req.body instanceof Object)
+    || typeof req.body.username !== 'string'
     || !req.body.username.trim()
   ) {
-    throw new LogicError(ErrorCode.AUTH_EMPTY_NAME);
+    next(new LogicError(ErrorCode.AUTH_EMPTY_NAME));
+    return;
   }
 
   const user = storage.add(req.body.username);
@@ -46,16 +55,24 @@ router.get('/key/info', (req, res) => {
 
 router.post('/key', ...authMiddlewares, (async (req, res, next) => {
   if (
-    typeof req.body !== 'object'
+    !(req.body instanceof Object)
     || req.body['public-key'] !== 'string'
     || !req.body['public-key'].trim()
   ) {
-    throw new LogicError(ErrorCode.KEY_BAD);
+    next(new LogicError(ErrorCode.KEY_BAD));
+    return;
   }
 
   const foreignPublicKey: string = req.body['public-key'];
-  if (!checkKeySize(foreignPublicKey)) {
-    throw new LogicError(ErrorCode.KEY_SIZE);
+  try {
+    if (!checkKeySize(foreignPublicKey)) {
+      next(new LogicError(ErrorCode.KEY_SIZE));
+      return;
+    }
+  } catch (err) {
+    logger.error(err);
+    next(new LogicError(ErrorCode.KEY_BAD));
+    return;
   }
 
   if (keyExpiration.has(req.user.name)) {

@@ -1,5 +1,5 @@
 import { ErrorCode, LogicError } from './errors.service';
-import { User } from 'src/services/user.class';
+import { User } from './user.class';
 import { EventEmitter } from 'events';
 
 const map = new Map<string, User>();

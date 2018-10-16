@@ -14,7 +14,7 @@ export function createToken(user: User) {
 }
 
 export function getUserFromPayload(obj: any) {
-  if (obj instanceof Object || !('id' in obj)) {
+  if (!(obj instanceof Object) || !('id' in obj)) {
     throw new LogicError(ErrorCode.AUTH_NO);
   }
   const name: string = obj.id;
@@ -56,7 +56,7 @@ function getJWTPayload(httpReq: IncomingMessage) {
 export function getUserFromHTTPRequest(request: IncomingMessage) {
   const payload = getJWTPayload(request);
 
-  if (payload instanceof Object && 'id' in (payload as Object)) {
+  if (payload instanceof Object && 'id' in (payload as object)) {
     return storage.get((payload as any).id);
   }
   throw new LogicError(ErrorCode.AUTH_NO);
