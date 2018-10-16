@@ -32,7 +32,7 @@ app.use(((err, req, res, next) => {
   }
 }) as ErrorRequestHandler);
 
-const httpServer = app.listen(3000);
+const httpServer = app.listen(80);
 const wsServer = new MessageHub(httpServer, subscribers, emitters, '/chat');
 
 logger.log('started listening');
