@@ -1,23 +1,25 @@
 import { EventHandler, MessageHub } from './message-hub.class';
-import {
-  decrypt,
-  encrypt,
-  keyExpiration,
-} from '../services/key-manager.service';
+import { decrypt, encrypt, keyExpiration, } from '../services/key-manager.service';
 import { ErrorCode, LogicError } from '../services/errors.service';
 import { logger } from '../services/logger.service';
 
 export const subscribers = new Map<string, EventHandler>([
-  ['message-sent', (client, hub, encryptedMsg: string) => {
-    const msg = decrypt(client.user.decryptKey, Buffer.from(encryptedMsg));
-    hub.broadcast('message-received', [], msg);
+  ['message-sent', (client, hub, payload?: any | null) => {
+    if (!(payload instanceof Object && 'message' in payload)) {
+      logger.error('Ill-formed message');
+      client.emit('error', new LogicError(ErrorCode.MSG_BAD));
+      return;
+    }
+    const msg = decrypt(client.user.decryptKey, Buffer.from(payload.message));
+    hub.broadcast('message-received', [], msg, client.user.name);
   }],
 ]);
 
 export const emitters = new Map<string, EventHandler>([
-  ['message-received', (client, hub, msg: string) => {
+  ['message-received', (client, hub, msg: string, username: string) => {
     client.emit('message-received', {
-      data: encrypt(client.user.encryptKey, msg),
+      username,
+      message: encrypt(client.user.encryptKey, msg),
     });
   }],
 
@@ -39,9 +41,9 @@ export const emitters = new Map<string, EventHandler>([
     });
   }],
 
-  ['user-left', (currClient, hub, newClient: MessageHub.Client) => {
+  ['user-left', (currClient, hub, oldClient: MessageHub.Client) => {
     currClient.emit('user-left', {
-      username: newClient.user.name,
+      username: oldClient.user.name,
     });
   }],
 

@@ -96,7 +96,7 @@ export class MessageHub {
 
           const handler = subscribeEvents.get(message.event);
 
-          handler!(client, this);
+          handler!(client, this, message.data);
         } catch (err) {
           this.emitEvents.get('error')!(client, this, new LogicError(ErrorCode.MSG_BAD));
           console.error(`Error for ${client.user.name}:\nERROR: ${err}`);
