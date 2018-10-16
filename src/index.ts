@@ -10,10 +10,10 @@ import { router } from './rest-routes';
 const app = express();
 
 app.use(bodyParser.json());
-app.use((req, res, next) => {
-  logger.log(req);
-  next();
-});
+// app.use((req, res, next) => {
+//   logger.log(req);
+//   next();
+// });
 app.use('/', router);
 app.use((req, res, next) => {
   res.status(404).json({});

@@ -69,6 +69,10 @@ export class MessageHub {
         request.reject(401, JSON.stringify(new LogicError(ErrorCode.AUTH_NO)));
         return;
       }
+      if (this.clients.some(client => client.user.name === user.name)) {
+        request.reject(400, JSON.stringify(new LogicError(ErrorCode.AUTH_DUPLICATE_NAME)));
+        return;
+      }
 
       // FIXME: maybe other protocol scpecifying is needed
       const connection = request.accept(null as any, request.origin);

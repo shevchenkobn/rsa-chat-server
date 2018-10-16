@@ -7,7 +7,7 @@
   "scripts": {
     "npm:g:dev": "sudo npm i rimraf tslint typescript nodemon tslint-config-airbnb -g -D",
     "build": "rimraf ./dist && tsc",
-    "start": "npm run build && node ./dist",
+    "start": "node ./dist",
     "start:dev": "npm run build && node --inspect=9229 ./dist",
     "watch": "nodemon -w src/**/*.* -x 'npm run start:dev'"
   },

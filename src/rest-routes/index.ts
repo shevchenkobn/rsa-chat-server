@@ -56,7 +56,7 @@ router.get('/key/info', (req, res) => {
 router.post('/key', ...authMiddlewares, (async (req, res, next) => {
   if (
     !(req.body instanceof Object)
-    || req.body['public-key'] !== 'string'
+    || typeof req.body['public-key'] !== 'string'
     || !req.body['public-key'].trim()
   ) {
     next(new LogicError(ErrorCode.KEY_BAD));
@@ -81,7 +81,14 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
 
   const rsaPair = await generateKeys();
 
+  logger.log(rsaPair);
+  logger.log(foreignPublicKey);
+
   saveKeysForUser(req.user, foreignPublicKey, rsaPair, true);
+
+  res.json({
+    'public-key': rsaPair.publicKey,
+  });
 }) as Handler);
 
 /**
