@@ -39,7 +39,8 @@ app.use(((err, req, res, next) => {
   }
 }) as ErrorRequestHandler);
 
-const httpServer = app.listen(process.env.PORT || 5000);
+const port = process.env.PORT || 5000;
+const httpServer = app.listen(port);
 const wsServer = new MessageHub(httpServer, subscribers, emitters, '/chat');
 
-logger.log('started listening');
+logger.log(`started listening at ${port}`);
