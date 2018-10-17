@@ -30,22 +30,22 @@ function generateKeys() {
     });
 }
 exports.generateKeys = generateKeys;
-function encrypt(key, str) {
+function encrypt(key, buffer) {
     const buffers = [];
     const [chunkSize] = chunkSizes;
-    for (let i = 0; i < str.length; i += chunkSize) {
-        buffers.push(crypto_1.publicEncrypt(key, Buffer.from(str.substr(i, chunkSize))));
+    for (let i = 0; i < buffer.length; i += chunkSize) {
+        buffers.push(crypto_1.publicEncrypt(key, buffer.slice(i, i + chunkSize)));
     }
     return Buffer.concat(buffers);
 }
 exports.encrypt = encrypt;
-function decrypt(key, buffer, encoding = 'utf8') {
+function decrypt(key, buffer) {
     const buffers = [];
     const [, chunkSize] = chunkSizes;
     for (let i = 0; i < buffer.length; i += chunkSize) {
         buffers.push(crypto_1.privateDecrypt(key, buffer.slice(i, i + chunkSize)));
     }
-    return Buffer.concat(buffers).toString(encoding);
+    return Buffer.concat(buffers);
 }
 exports.decrypt = decrypt;
 const scheduledExpirations = new Map();
@@ -60,13 +60,13 @@ exports.keyExpiration = {
         const timeout = setTimeout(() => {
             const user = user_storage_service_1.storage.get(userName);
             user.deleteKeys();
-            scheduledExpirations.delete(userName);
+            const [timeout, callback] = scheduledExpirations.get(userName);
             // FIXME: maybe not needed
             clearTimeout(timeout);
-            const callback = scheduledExpirations.get(userName)[1];
             if (callback) {
                 callback(user);
             }
+            scheduledExpirations.delete(userName);
         }, config_1.keyConfig.expireTime);
         scheduledExpirations.set(userName, [timeout, callback]);
     },

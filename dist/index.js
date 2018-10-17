@@ -19,11 +19,15 @@ app.use((req, res, next) => {
 });
 app.use(((err, req, res, next) => {
     if (err instanceof errors_service_1.LogicError) {
-        if (err.code !== errors_service_1.ErrorCode.SERVER) {
-            res.status(400);
-        }
-        else {
-            res.status(500);
+        switch (err.code) {
+            case errors_service_1.ErrorCode.AUTH_NO:
+                res.status(401);
+                break;
+            case errors_service_1.ErrorCode.SERVER:
+                res.status(500);
+                break;
+            default:
+                res.status(400);
         }
         res.json(err);
     }
@@ -32,7 +36,7 @@ app.use(((err, req, res, next) => {
         res.status(500).json(new errors_service_1.LogicError(errors_service_1.ErrorCode.SERVER));
     }
 }));
-const httpServer = app.listen(3000);
+const httpServer = app.listen(80);
 const wsServer = new message_hub_class_1.MessageHub(httpServer, event_handlers_1.subscribers, event_handlers_1.emitters, '/chat');
 logger_service_1.logger.log('started listening');
 //# sourceMappingURL=index.js.map

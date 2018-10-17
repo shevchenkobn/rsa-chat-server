@@ -31,11 +31,11 @@ exports.authMiddlewares = [
     }),
 ];
 const tokenSchemeRegex = /^Bearer$/;
-const spaces = /^\s+/;
+const spaces = /\s+/;
 function getJWTPayload(httpReq) {
     const authParts = httpReq.headers.authorization
         .split(spaces);
-    if (authParts.length !== 2 || tokenSchemeRegex.test(authParts[0])) {
+    if (authParts.length !== 2 || !tokenSchemeRegex.test(authParts[0])) {
         return null;
     }
     let payload;
@@ -50,7 +50,7 @@ function getJWTPayload(httpReq) {
 }
 function getUserFromHTTPRequest(request) {
     const payload = getJWTPayload(request);
-    if (payload instanceof Object && 'id' in payload) {
+    if (payload instanceof Object && typeof payload.id === 'string') {
         return user_storage_service_1.storage.get(payload.id);
     }
     throw new errors_service_1.LogicError(errors_service_1.ErrorCode.AUTH_NO);

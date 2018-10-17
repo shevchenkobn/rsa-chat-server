@@ -17,7 +17,7 @@ class MessageHub {
         }
         this.httpServer = httpServer;
         this.subscribeEvents = subscribeEvents;
-        this.emitEvents = subscribeEvents;
+        this.emitEvents = emitEvents;
         this.chatPath = chatPath;
         this.server = new ws.server({
             httpServer,
@@ -69,7 +69,7 @@ class MessageHub {
                 }
                 catch (err) {
                     this.emitEvents.get('error')(client, this, new errors_service_1.LogicError(errors_service_1.ErrorCode.MSG_BAD));
-                    console.error(`Error for ${client.user.name}:\nERROR: ${err}`);
+                    logger_service_1.logger.error(`Error for ${client.user.name}:\nERROR: ${err}`);
                 }
             });
             connection.on('close', (reason, desc) => {
