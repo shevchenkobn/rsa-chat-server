@@ -20,10 +20,17 @@ app.use((req, res, next) => {
 });
 app.use(((err, req, res, next) => {
   if (err instanceof LogicError) {
-    if (err.code !== ErrorCode.SERVER) {
-      res.status(400);
-    } else {
-      res.status(500);
+    switch (err.code) {
+      case ErrorCode.AUTH_NO:
+        res.status(401);
+        break;
+
+      case ErrorCode.SERVER:
+        res.status(500);
+        break;
+
+      default:
+        res.status(400);
     }
     res.json(err);
   } else {

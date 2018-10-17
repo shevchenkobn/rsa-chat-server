@@ -34,12 +34,12 @@ export const authMiddlewares: ReadonlyArray<Handler | ErrorRequestHandler> = [
 ];
 
 const tokenSchemeRegex = /^Bearer$/;
-const spaces = /^\s+/;
+const spaces = /\s+/;
 
 function getJWTPayload(httpReq: IncomingMessage) {
   const authParts = (httpReq.headers.authorization as string)
     .split(spaces);
-  if (authParts.length !== 2 || tokenSchemeRegex.test(authParts[0])) {
+  if (authParts.length !== 2 || !tokenSchemeRegex.test(authParts[0])) {
     return null;
   }
 
@@ -56,7 +56,7 @@ function getJWTPayload(httpReq: IncomingMessage) {
 export function getUserFromHTTPRequest(request: IncomingMessage) {
   const payload = getJWTPayload(request);
 
-  if (payload instanceof Object && 'id' in (payload as object)) {
+  if (payload instanceof Object && typeof (payload as any).id === 'string') {
     return storage.get((payload as any).id);
   }
   throw new LogicError(ErrorCode.AUTH_NO);

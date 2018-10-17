@@ -1,25 +1,25 @@
 import { EventHandler, MessageHub } from './message-hub.class';
-import { decrypt, encrypt, keyExpiration, } from '../services/key-manager.service';
+import { decrypt, encrypt, keyExpiration } from '../services/key-manager.service';
 import { ErrorCode, LogicError } from '../services/errors.service';
 import { logger } from '../services/logger.service';
 
 export const subscribers = new Map<string, EventHandler>([
   ['message-sent', (client, hub, payload?: any | null) => {
-    if (!(payload instanceof Object && 'message' in payload)) {
+    if (!(payload instanceof Object && typeof payload.message !== 'string')) {
       logger.error('Ill-formed message');
       client.emit('error', new LogicError(ErrorCode.MSG_BAD));
       return;
     }
-    const msg = decrypt(client.user.decryptKey, Buffer.from(payload.message));
-    hub.broadcast('message-received', [], msg, client.user.name);
+    const msgBuffer = decrypt(client.user.decryptKey, Buffer.from(payload.message, 'base64'));
+    hub.broadcast('message-received', [], msgBuffer, client.user.name);
   }],
 ]);
 
 export const emitters = new Map<string, EventHandler>([
-  ['message-received', (client, hub, msg: string, username: string) => {
+  ['message-received', (client, hub, msg: Buffer, username: string) => {
     client.emit('message-received', {
       username,
-      message: encrypt(client.user.encryptKey, msg),
+      message: encrypt(client.user.encryptKey, msg).toString('base64'),
     });
   }],
 

@@ -37,18 +37,18 @@ export function generateKeys(): Promise<RsaKey> {
   });
 }
 
-export function encrypt(key: string, str: string) {
+export function encrypt(key: string, buffer: Buffer) {
   const buffers = [];
   const [chunkSize] = chunkSizes;
-  for (let i = 0; i < str.length; i += chunkSize) {
+  for (let i = 0; i < buffer.length; i += chunkSize) {
     buffers.push(
-      publicEncrypt(key, Buffer.from(str.substr(i, chunkSize))),
+      publicEncrypt(key, buffer.slice(i, i + chunkSize)),
     );
   }
   return Buffer.concat(buffers);
 }
 
-export function decrypt(key: string, buffer: Buffer, encoding = 'utf8') {
+export function decrypt(key: string, buffer: Buffer) {
   const buffers = [];
   const [, chunkSize] = chunkSizes;
   for (let i = 0; i < buffer.length; i += chunkSize) {
@@ -56,7 +56,7 @@ export function decrypt(key: string, buffer: Buffer, encoding = 'utf8') {
       privateDecrypt(key, buffer.slice(i, i + chunkSize)),
     );
   }
-  return Buffer.concat(buffers).toString(encoding);
+  return Buffer.concat(buffers);
 }
 
 export type KeyExpiredCallback = (user: User) => void;
@@ -74,14 +74,15 @@ export const keyExpiration = {
     const timeout = setTimeout(() => {
       const user = storage.get(userName);
       user.deleteKeys();
-      scheduledExpirations.delete(userName);
+
+      const [timeout, callback] = scheduledExpirations.get(userName)!;
       // FIXME: maybe not needed
       clearTimeout(timeout);
 
-      const callback = scheduledExpirations.get(userName)![1];
       if (callback) {
         callback(user);
       }
+      scheduledExpirations.delete(userName);
     }, keyConfig.expireTime);
     scheduledExpirations.set(userName, [timeout, callback]);
   },
