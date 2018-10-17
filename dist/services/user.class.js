@@ -3,16 +3,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const errors_service_1 = require("./errors.service");
 class User {
     get encryptKey() {
-        if (this._encryptKey) {
+        if (!this._encryptKey) {
             throw new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_BAD);
         }
         return this._encryptKey;
     }
     get decryptKey() {
-        if (this._decryptKey) {
+        if (!this._decryptKey) {
             throw new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_BAD);
         }
-        return this._encryptKey;
+        return this._decryptKey;
     }
     get updatedAt() {
         return this._updatedAt;

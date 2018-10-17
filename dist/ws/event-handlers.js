@@ -47,7 +47,7 @@ exports.emitters = new Map([
             key_manager_service_1.keyExpiration.deleteCallback(client.user.name);
         }],
     ['error', (currClient, hub, err) => {
-            currClient.emit('error', err instanceof errors_service_1.LogicError ? err : new errors_service_1.LogicError(errors_service_1.ErrorCode.SERVER));
+            currClient.emit('error', err instanceof errors_service_1.LogicError ? err : new errors_service_1.LogicError(errors_service_1.ErrorCode.MSG_BAD));
             logger_service_1.logger.error(err);
         }],
 ]);

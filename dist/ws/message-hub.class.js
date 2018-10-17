@@ -68,7 +68,7 @@ class MessageHub {
                     handler(client, this, message.data);
                 }
                 catch (err) {
-                    this.emitEvents.get('error')(client, this, new errors_service_1.LogicError(errors_service_1.ErrorCode.MSG_BAD));
+                    this.emitEvents.get('error')(client, this, err);
                     logger_service_1.logger.error(`Error for ${client.user.name}:\nERROR: ${err}`);
                 }
             });
