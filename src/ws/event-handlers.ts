@@ -52,7 +52,7 @@ export const emitters = new Map<string, EventHandler>([
   }],
 
   ['error', (currClient, hub, err: Error) => {
-    currClient.emit('error', err instanceof LogicError ? err : new LogicError(ErrorCode.SERVER));
+    currClient.emit('error', err instanceof LogicError ? err : new LogicError(ErrorCode.MSG_BAD));
     logger.error(err);
   }],
 ]);

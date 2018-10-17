@@ -102,7 +102,7 @@ export class MessageHub {
 
           handler!(client, this, message.data);
         } catch (err) {
-          this.emitEvents.get('error')!(client, this, new LogicError(ErrorCode.MSG_BAD));
+          this.emitEvents.get('error')!(client, this, err);
           logger.error(`Error for ${client.user.name}:\nERROR: ${err}`);
         }
       });
