@@ -46,7 +46,7 @@ export class MessageHub {
 
     this.httpServer = httpServer;
     this.subscribeEvents = subscribeEvents;
-    this.emitEvents = subscribeEvents;
+    this.emitEvents = emitEvents;
     this.chatPath = chatPath;
     this.server = new ws.server({
       httpServer,
@@ -103,7 +103,7 @@ export class MessageHub {
           handler!(client, this, message.data);
         } catch (err) {
           this.emitEvents.get('error')!(client, this, new LogicError(ErrorCode.MSG_BAD));
-          console.error(`Error for ${client.user.name}:\nERROR: ${err}`);
+          logger.error(`Error for ${client.user.name}:\nERROR: ${err}`);
         }
       });
 
