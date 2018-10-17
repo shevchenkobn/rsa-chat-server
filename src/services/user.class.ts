@@ -8,17 +8,17 @@ export class User {
   protected _lastLoggedIn: number;
 
   get encryptKey() {
-    if (this._encryptKey) {
+    if (!this._encryptKey) {
       throw new LogicError(ErrorCode.KEY_BAD);
     }
     return this._encryptKey;
   }
 
   get decryptKey() {
-    if (this._decryptKey) {
+    if (!this._decryptKey) {
       throw new LogicError(ErrorCode.KEY_BAD);
     }
-    return this._encryptKey;
+    return this._decryptKey;
   }
 
   get updatedAt() {
