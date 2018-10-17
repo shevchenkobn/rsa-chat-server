@@ -36,7 +36,7 @@ app.use(((err, req, res, next) => {
         res.status(500).json(new errors_service_1.LogicError(errors_service_1.ErrorCode.SERVER));
     }
 }));
-const httpServer = app.listen(80);
+const httpServer = app.listen(process.env.PORT || 5000);
 const wsServer = new message_hub_class_1.MessageHub(httpServer, event_handlers_1.subscribers, event_handlers_1.emitters, '/chat');
 logger_service_1.logger.log('started listening');
 //# sourceMappingURL=index.js.map
