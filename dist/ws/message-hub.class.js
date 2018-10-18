@@ -59,11 +59,13 @@ class MessageHub {
                 logger_service_1.logger.error(`Connection ${client.user.name} is about to close due to ${err}`);
             });
             connection.on('message', (data) => {
+                logger_service_1.logger.log(`Message from ${client.user.name}`);
                 try {
                     const message = JSON.parse(data.utf8Data);
                     if (!message || typeof message.event !== 'string') {
                         throw new TypeError('Bad message');
                     }
+                    logger_service_1.logger.log(`Event ${message.event}`);
                     const handler = subscribeEvents.get(message.event);
                     handler(client, this, message.data);
                 }

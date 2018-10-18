@@ -58,13 +58,20 @@ exports.keyExpiration = {
             throw new errors_service_1.LogicError(errors_service_2.ErrorCode.SERVER);
         }
         const timeout = setTimeout(() => {
-            const user = user_storage_service_1.storage.get(userName);
-            user.deleteKeys();
-            const [timeout, callback] = scheduledExpirations.get(userName);
-            // FIXME: maybe not needed
-            clearTimeout(timeout);
+            let error = null;
+            let user = null;
+            try {
+                user = user_storage_service_1.storage.get(userName);
+                user.deleteKeys();
+                const [timeout, callback] = scheduledExpirations.get(userName);
+                // FIXME: maybe not needed
+                clearTimeout(timeout);
+            }
+            catch (err) {
+                error = err;
+            }
             if (callback) {
-                callback(user);
+                callback(error, user);
             }
             scheduledExpirations.delete(userName);
         }, config_1.keyConfig.expireTime);
@@ -100,7 +107,10 @@ exports.keyExpiration = {
         scheduled[1] = undefined;
     },
 };
-user_storage_service_1.storage.on('delete', (user) => exports.keyExpiration.delete(user.name));
+user_storage_service_1.storage.on('delete', (user) => {
+    exports.keyExpiration.delete(user.name);
+    logger_service_1.logger.log(`keyExpiration for ${user.name} is deleted`);
+});
 // export function scheduleExpiration(userName: string, callback?: KeyExpiredCallback) {
 //   if (scheduledExpirations.has(userName)) {
 //     throw new LogicError(ErrorCode.SERVER);

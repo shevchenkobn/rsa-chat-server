@@ -30,6 +30,7 @@ exports.router.post('/auth', (req, res, next) => {
 });
 exports.router.delete('/auth', ...auth_service_1.authMiddlewares, ((req, res, next) => {
     const user = req.user;
+    logger_service_1.logger.log(`Deleting token for ${user.name}`);
     user_storage_service_1.storage.delete(user.name);
     res.json({});
 }));
@@ -40,6 +41,7 @@ exports.router.get('/key/info', (req, res) => {
     res.json(config_1.keyConfig);
 });
 exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res, next) => {
+    logger_service_1.logger.log('Key generating');
     if (!(req.body instanceof Object)
         || typeof req.body['public-key'] !== 'string'
         || !req.body['public-key'].trim()) {
@@ -60,10 +62,12 @@ exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res,
     }
     if (key_manager_service_1.keyExpiration.has(req.user.name)) {
         key_manager_service_1.keyExpiration.delete(req.user.name);
+        logger_service_1.logger.log('Had keys, deleting');
     }
     const rsaPair = await key_manager_service_1.generateKeys();
-    logger_service_1.logger.log(rsaPair);
-    logger_service_1.logger.log(foreignPublicKey);
+    logger_service_1.logger.log(`My public key:\n${rsaPair.publicKey}`);
+    logger_service_1.logger.log(`My private key:\n${rsaPair.privateKey}`);
+    logger_service_1.logger.log(`Client's public key:\n${foreignPublicKey}`);
     key_manager_service_1.saveKeysForUser(req.user, foreignPublicKey, rsaPair, true);
     res.json({
         'public-key': rsaPair.publicKey,

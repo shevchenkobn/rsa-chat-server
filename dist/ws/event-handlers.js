@@ -22,15 +22,19 @@ exports.emitters = new Map([
             });
         }],
     ['client-created', (client, hub) => {
-            if (!key_manager_service_1.keyExpiration.has(client.user.name)) {
-                key_manager_service_1.keyExpiration.schedule(client.user.name, () => {
+            const callback = (err) => {
+                if (err) {
+                    hub.emitEvents.get('error')(client, hub, err);
+                }
+                else {
                     client.emit('key-outdated', {});
-                });
+                }
+            };
+            if (!key_manager_service_1.keyExpiration.has(client.user.name)) {
+                key_manager_service_1.keyExpiration.schedule(client.user.name, callback);
             }
             else {
-                key_manager_service_1.keyExpiration.setCallback(client.user.name, () => {
-                    client.emit('key-outdated', {});
-                });
+                key_manager_service_1.keyExpiration.setCallback(client.user.name, callback);
             }
         }],
     ['user-joined', (currClient, hub, newClient) => {

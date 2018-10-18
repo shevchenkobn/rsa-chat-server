@@ -92,12 +92,14 @@ export class MessageHub {
       });
 
       connection.on('message', (data) => {
+        logger.log(`Message from ${client.user.name}`);
         try {
           const message = JSON.parse(data.utf8Data as string);
           if (!message || typeof message.event !== 'string') {
             throw new TypeError('Bad message');
           }
 
+          logger.log(`Event ${message.event}`);
           const handler = subscribeEvents.get(message.event);
 
           handler!(client, this, message.data);

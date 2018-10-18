@@ -29,6 +29,7 @@ export const authMiddlewares: ReadonlyArray<Handler | ErrorRequestHandler> = [
   },
   ((req, res, next) => {
     req.user = getUserFromPayload(req.user);
+    logger.log(`User: ${req.user.name}`);
     next();
   }) as Handler,
 ];

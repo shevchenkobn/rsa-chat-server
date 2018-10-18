@@ -41,6 +41,7 @@ router.post('/auth', (req, res, next) => {
 
 router.delete('/auth', ...authMiddlewares, ((req, res, next) => {
   const user: User = req.user;
+  logger.log(`Deleting token for ${user.name}`);
   storage.delete(user.name);
 
   res.json({});
@@ -54,6 +55,7 @@ router.get('/key/info', (req, res) => {
 });
 
 router.post('/key', ...authMiddlewares, (async (req, res, next) => {
+  logger.log('Key generating');
   if (
     !(req.body instanceof Object)
     || typeof req.body['public-key'] !== 'string'
@@ -77,12 +79,14 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
 
   if (keyExpiration.has(req.user.name)) {
     keyExpiration.delete(req.user.name);
+    logger.log('Had keys, deleting');
   }
 
   const rsaPair = await generateKeys();
 
-  logger.log(rsaPair);
-  logger.log(foreignPublicKey);
+  logger.log(`My public key:\n${rsaPair.publicKey}`);
+  logger.log(`My private key:\n${rsaPair.privateKey}`);
+  logger.log(`Client's public key:\n${foreignPublicKey}`);
 
   saveKeysForUser(req.user, foreignPublicKey, rsaPair, true);
 

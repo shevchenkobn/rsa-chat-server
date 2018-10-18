@@ -59,7 +59,7 @@ export function decrypt(key: string, buffer: Buffer) {
   return Buffer.concat(buffers);
 }
 
-export type KeyExpiredCallback = (user: User) => void;
+export type KeyExpiredCallback = (err: any | null, user: User | null) => void;
 const scheduledExpirations = new Map<string, [NodeJS.Timeout, KeyExpiredCallback?]>();
 
 export const keyExpiration = {
@@ -72,15 +72,20 @@ export const keyExpiration = {
       throw new LogicError(ErrorCode.SERVER);
     }
     const timeout = setTimeout(() => {
-      const user = storage.get(userName);
-      user.deleteKeys();
+      let error = null;
+      let user = null;
+      try {
+        user = storage.get(userName);
+        user.deleteKeys();
 
-      const [timeout, callback] = scheduledExpirations.get(userName)!;
-      // FIXME: maybe not needed
-      clearTimeout(timeout);
-
+        const [timeout, callback] = scheduledExpirations.get(userName)!;
+        // FIXME: maybe not needed
+        clearTimeout(timeout);
+      } catch (err) {
+        error = err;
+      }
       if (callback) {
-        callback(user);
+        callback(error, user);
       }
       scheduledExpirations.delete(userName);
     }, keyConfig.expireTime);
@@ -124,7 +129,10 @@ export const keyExpiration = {
   },
 };
 
-storage.on('delete', (user: User) => keyExpiration.delete(user.name));
+storage.on('delete', (user: User) => {
+  keyExpiration.delete(user.name);
+  logger.log(`keyExpiration for ${user.name} is deleted`);
+});
 
 // export function scheduleExpiration(userName: string, callback?: KeyExpiredCallback) {
 //   if (scheduledExpirations.has(userName)) {

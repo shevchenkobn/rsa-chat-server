@@ -1,5 +1,10 @@
 import { EventHandler, MessageHub } from './message-hub.class';
-import { decrypt, encrypt, keyExpiration } from '../services/key-manager.service';
+import {
+  decrypt,
+  encrypt,
+  keyExpiration,
+  KeyExpiredCallback
+} from '../services/key-manager.service';
 import { ErrorCode, LogicError } from '../services/errors.service';
 import { logger } from '../services/logger.service';
 
@@ -24,14 +29,17 @@ export const emitters = new Map<string, EventHandler>([
   }],
 
   ['client-created', (client, hub) => {
+    const callback: KeyExpiredCallback = (err) => {
+      if (err) {
+        hub.emitEvents.get('error')!(client, hub, err);
+      } else {
+        client.emit('key-outdated', {});
+      }
+    };
     if (!keyExpiration.has(client.user.name)) {
-      keyExpiration.schedule(client.user.name, () => {
-        client.emit('key-outdated', {});
-      });
+      keyExpiration.schedule(client.user.name, callback);
     } else {
-      keyExpiration.setCallback(client.user.name, () => {
-        client.emit('key-outdated', {});
-      });
+      keyExpiration.setCallback(client.user.name, callback);
     }
   }],
 
