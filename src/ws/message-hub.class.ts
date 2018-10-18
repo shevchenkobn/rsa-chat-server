@@ -61,15 +61,18 @@ export class MessageHub {
         request.reject(404);
         return;
       }
+      logger.log('Request for WS connect');
 
       let user: User;
       try {
         user = getUserFromHTTPRequest(request.httpRequest);
       } catch (err) {
+        logger.error('Bad token');
         request.reject(401, JSON.stringify(new LogicError(ErrorCode.AUTH_NO)));
         return;
       }
       if (this.clients.some(client => client.user.name === user.name)) {
+        logger.error(`Double connect for ${user.name}`);
         request.reject(400, JSON.stringify(new LogicError(ErrorCode.AUTH_DUPLICATE_NAME)));
         return;
       }

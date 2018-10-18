@@ -30,15 +30,18 @@ class MessageHub {
                 request.reject(404);
                 return;
             }
+            logger_service_1.logger.log('Request for WS connect');
             let user;
             try {
                 user = auth_service_1.getUserFromHTTPRequest(request.httpRequest);
             }
             catch (err) {
+                logger_service_1.logger.error('Bad token');
                 request.reject(401, JSON.stringify(new errors_service_1.LogicError(errors_service_1.ErrorCode.AUTH_NO)));
                 return;
             }
             if (this.clients.some(client => client.user.name === user.name)) {
+                logger_service_1.logger.error(`Double connect for ${user.name}`);
                 request.reject(400, JSON.stringify(new errors_service_1.LogicError(errors_service_1.ErrorCode.AUTH_DUPLICATE_NAME)));
                 return;
             }
