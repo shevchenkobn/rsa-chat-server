@@ -26,6 +26,7 @@ exports.router.post('/auth', (req, res, next) => {
     }
     const user = user_storage_service_1.storage.add(req.body.username);
     const token = auth_service_1.createToken(user);
+    logger_service_1.logger.log(`User ${user.name} has token ${token}`);
     res.json({ token });
 });
 exports.router.delete('/auth', ...auth_service_1.authMiddlewares, ((req, res, next) => {

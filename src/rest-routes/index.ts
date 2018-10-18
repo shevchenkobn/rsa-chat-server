@@ -36,6 +36,7 @@ router.post('/auth', (req, res, next) => {
 
   const user = storage.add(req.body.username);
   const token = createToken(user);
+  logger.log(`User ${user.name} has token ${token}`);
   res.json({ token });
 });
 
