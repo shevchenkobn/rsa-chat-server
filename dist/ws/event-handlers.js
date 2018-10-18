@@ -5,7 +5,7 @@ const errors_service_1 = require("../services/errors.service");
 const logger_service_1 = require("../services/logger.service");
 exports.subscribers = new Map([
     ['message-sent', (client, hub, payload) => {
-            if (!(payload instanceof Object && typeof payload.message !== 'string')) {
+            if (!(payload instanceof Object && typeof payload.message === 'string')) {
                 logger_service_1.logger.error('Ill-formed message');
                 client.emit('error', new errors_service_1.LogicError(errors_service_1.ErrorCode.MSG_BAD));
                 return;

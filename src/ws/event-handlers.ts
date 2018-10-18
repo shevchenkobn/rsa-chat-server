@@ -10,7 +10,7 @@ import { logger } from '../services/logger.service';
 
 export const subscribers = new Map<string, EventHandler>([
   ['message-sent', (client, hub, payload?: any | null) => {
-    if (!(payload instanceof Object && typeof payload.message !== 'string')) {
+    if (!(payload instanceof Object && typeof payload.message === 'string')) {
       logger.error('Ill-formed message');
       client.emit('error', new LogicError(ErrorCode.MSG_BAD));
       return;
