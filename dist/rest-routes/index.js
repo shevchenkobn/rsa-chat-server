@@ -26,7 +26,7 @@ exports.router.post('/auth', (req, res, next) => {
     }
     const user = user_storage_service_1.storage.add(req.body.username);
     const token = auth_service_1.createToken(user);
-    logger_service_1.logger.log(`User ${user.name} has token ${token}`);
+    logger_service_1.logger.log(`\nUser ${user.name} has token ${token}`);
     res.json({ token });
 });
 exports.router.delete('/auth', ...auth_service_1.authMiddlewares, ((req, res, next) => {
@@ -46,6 +46,7 @@ exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res,
     if (!(req.body instanceof Object)
         || typeof req.body['public-key'] !== 'string'
         || !req.body['public-key'].trim()) {
+        logger_service_1.logger.log('Bad object');
         next(new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_BAD));
         return;
     }

@@ -61,7 +61,7 @@ export class MessageHub {
         request.reject(404);
         return;
       }
-      logger.log('Request for WS connect');
+      logger.log('\nRequest for WS connect');
 
       let user: User;
       try {
@@ -91,11 +91,11 @@ export class MessageHub {
         } catch (err) {
           logger.info('Error notification doesn\'t work');
         }
-        logger.error(`Connection ${client.user.name} is about to close due to ${err}`);
+        logger.error(`\nConnection ${client.user.name} is about to close due to ${err}`);
       });
 
       connection.on('message', (data) => {
-        logger.log(`Message from ${client.user.name}`);
+        logger.log(`\nMessage from ${client.user.name}`);
         try {
           const message = JSON.parse(data.utf8Data as string);
           if (!message || typeof message.event !== 'string') {
@@ -116,7 +116,7 @@ export class MessageHub {
         clients.splice(clients.indexOf(client), 1);
         this.broadcast('user-left', [], client);
         this.emitEvents.get('client-disposed')!(client, this);
-        logger.log(`Disonnected ${client.user.name} because of ${reason} (${desc})`);
+        logger.log(`\nDisonnected ${client.user.name} because of ${reason} (${desc})`);
       });
     });
   }

@@ -30,7 +30,7 @@ class MessageHub {
                 request.reject(404);
                 return;
             }
-            logger_service_1.logger.log('Request for WS connect');
+            logger_service_1.logger.log('\nRequest for WS connect');
             let user;
             try {
                 user = auth_service_1.getUserFromHTTPRequest(request.httpRequest);
@@ -59,10 +59,10 @@ class MessageHub {
                 catch (err) {
                     logger_service_1.logger.info('Error notification doesn\'t work');
                 }
-                logger_service_1.logger.error(`Connection ${client.user.name} is about to close due to ${err}`);
+                logger_service_1.logger.error(`\nConnection ${client.user.name} is about to close due to ${err}`);
             });
             connection.on('message', (data) => {
-                logger_service_1.logger.log(`Message from ${client.user.name}`);
+                logger_service_1.logger.log(`\nMessage from ${client.user.name}`);
                 try {
                     const message = JSON.parse(data.utf8Data);
                     if (!message || typeof message.event !== 'string') {
@@ -81,7 +81,7 @@ class MessageHub {
                 clients.splice(clients.indexOf(client), 1);
                 this.broadcast('user-left', [], client);
                 this.emitEvents.get('client-disposed')(client, this);
-                logger_service_1.logger.log(`Disonnected ${client.user.name} because of ${reason} (${desc})`);
+                logger_service_1.logger.log(`\nDisonnected ${client.user.name} because of ${reason} (${desc})`);
             });
         });
     }

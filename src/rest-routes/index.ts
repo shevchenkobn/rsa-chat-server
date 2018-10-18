@@ -36,7 +36,7 @@ router.post('/auth', (req, res, next) => {
 
   const user = storage.add(req.body.username);
   const token = createToken(user);
-  logger.log(`User ${user.name} has token ${token}`);
+  logger.log(`\nUser ${user.name} has token ${token}`);
   res.json({ token });
 });
 
@@ -62,6 +62,7 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
     || typeof req.body['public-key'] !== 'string'
     || !req.body['public-key'].trim()
   ) {
+    logger.log('Bad object');
     next(new LogicError(ErrorCode.KEY_BAD));
     return;
   }

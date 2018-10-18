@@ -27,7 +27,7 @@ exports.authMiddlewares = [
     },
     ((req, res, next) => {
         req.user = getUserFromPayload(req.user);
-        logger_service_1.logger.log(`User: ${req.user.name}`);
+        logger_service_1.logger.log(`\nUser: ${req.user.name}`);
         next();
     }),
 ];
