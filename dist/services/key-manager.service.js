@@ -160,8 +160,8 @@ class PublicKey {
                 }
                 break;
             case 'object':
-                if (format === 'base64') {
-                    source.n = JSON.parse(Buffer.from(source.n, 'base64').toString('utf8'));
+                if (typeof source.n === 'string' && format === 'base64') {
+                    source.n = Buffer.from(source.n, 'base64');
                 }
                 this.importFromObject(source);
                 break;
