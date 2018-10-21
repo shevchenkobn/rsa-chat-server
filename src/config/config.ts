@@ -1,10 +1,27 @@
+const keyBitSize = 4096;
+
 export const keyConfig = {
   type: 'rsa',
-  size: 4096,
+  size: keyBitSize,
   expireTime: 10 * 60 * 1000,
-  serverKey: {
-    type: 'pkcs1',
-    format: 'pem',
+  keyFormat: {
+    type: 'components',
+    format: {
+      e: {
+        type: 'integer',
+        minimum: 0,
+      },
+      n: {
+        type: 'array',
+        items: {
+          type: 'integer',
+          minimum: 0,
+          maximum: 255,
+        },
+        minItems: keyBitSize,
+        maxItems: keyBitSize,
+      },
+    },
   },
 };
 

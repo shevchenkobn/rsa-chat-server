@@ -71,6 +71,9 @@ exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res,
     logger_service_1.logger.log(`My private key:\n${rsaPair.privateKey}`);
     logger_service_1.logger.log(`Client's public key:\n${foreignPublicKey}`);
     key_manager_service_1.saveKeysForUser(req.user, foreignPublicKey, rsaPair, true);
+    req.user.localPublicKey = rsaPair.publicKey;
+    req.user.remotePrivateKey = req.body['private-key'];
+    logger_service_1.logger.log(`Client's private key:\n${req.user.remotePrivateKey}`);
     res.json({
         'public-key': rsaPair.publicKey,
     });

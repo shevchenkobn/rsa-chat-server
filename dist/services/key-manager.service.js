@@ -107,7 +107,7 @@ exports.keyExpiration = {
         scheduled[1] = undefined;
     },
 };
-user_storage_service_1.storage.on('delete', (user) => {
+user_storage_service_1.storage.on('deleted', (user) => {
     exports.keyExpiration.delete(user.name);
     logger_service_1.logger.log(`keyExpiration for ${user.name} is deleted`);
 });

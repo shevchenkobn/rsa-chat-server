@@ -15,6 +15,17 @@ export const subscribers = new Map<string, EventHandler>([
       client.emit('error', new LogicError(ErrorCode.MSG_BAD));
       return;
     }
+
+    // const sampleMsg = Buffer.from('Hello, fuckers))))').toString('base64');
+    // const encrypted = encrypt(client.user.encryptKey, Buffer.from(sampleMsg, 'base64'));
+    // logger.debug(encrypted.toString('base64'));
+    // logger.debug(
+    //   decrypt(
+    //     client.user.remotePrivateKey,
+    //     encrypted,
+    //   ).toString('utf8'),
+    // );
+
     const msgBuffer = decrypt(client.user.decryptKey, Buffer.from(payload.message, 'base64'));
     hub.broadcast('message-received', [], msgBuffer, client.user.name);
   }],

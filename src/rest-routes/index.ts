@@ -6,9 +6,9 @@ import { User } from '../services/user.class';
 import { keyConfig } from '../config/config';
 import { logger } from '../services/logger.service';
 import {
-  checkKeySize,
   generateKeys,
   keyExpiration,
+  PublicKey,
   saveKeysForUser,
 } from '../services/key-manager.service';
 
@@ -57,25 +57,22 @@ router.get('/key/info', (req, res) => {
 
 router.post('/key', ...authMiddlewares, (async (req, res, next) => {
   logger.log('Key generating');
-  if (
-    !(req.body instanceof Object)
-    || typeof req.body['public-key'] !== 'string'
-    || !req.body['public-key'].trim()
-  ) {
-    logger.log('Bad object');
+  if (!(req.body instanceof Object)) {
+    logger.log('Body is not object');
     next(new LogicError(ErrorCode.KEY_BAD));
     return;
   }
 
-  const foreignPublicKey: string = req.body['public-key'];
+  let foreignPublicKey;
   try {
-    if (!checkKeySize(foreignPublicKey)) {
-      next(new LogicError(ErrorCode.KEY_SIZE));
-      return;
-    }
+    foreignPublicKey = new PublicKey(req.body['public-key'], 'base64');
   } catch (err) {
     logger.error(err);
-    next(new LogicError(ErrorCode.KEY_BAD));
+    if (err instanceof LogicError && err.code === ErrorCode.KEY_SIZE) {
+      next(err);
+    } else {
+      next(new LogicError(ErrorCode.KEY_BAD));
+    }
     return;
   }
 
@@ -87,13 +84,16 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
   const rsaPair = await generateKeys();
 
   logger.log(`My public key:\n${rsaPair.publicKey}`);
-  logger.log(`My private key:\n${rsaPair.privateKey}`);
+  // logger.log(`My private key:\n${rsaPair.privateKey}`);
   logger.log(`Client's public key:\n${foreignPublicKey}`);
 
-  saveKeysForUser(req.user, foreignPublicKey, rsaPair, true);
+  saveKeysForUser(req.user, rsaPair, foreignPublicKey);
+  // req.user.localPublicKey = rsaPair.publicKey;
+  // req.user.remotePrivateKey = req.body['private-key'];
+  // logger.log(`Client's private key:\n${req.user.remotePrivateKey}`);
 
   res.json({
-    'public-key': rsaPair.publicKey,
+    'public-key': new PublicKey(rsaPair.publicKey, 'pkcs1-public-pem').toJSON(),
   });
 }) as Handler);
 

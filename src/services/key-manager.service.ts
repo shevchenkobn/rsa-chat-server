@@ -1,12 +1,11 @@
 import * as crypto from 'crypto';
 import { privateDecrypt, publicEncrypt } from 'crypto';
+import * as RsaKey from 'node-rsa';
 import { keyConfig } from '../config/config';
 import { storage } from './user-storage.service';
-import { LogicError } from './errors.service';
-import { ErrorCode } from './errors.service';
+import { ErrorCode, LogicError } from './errors.service';
 import { User } from './user.class';
 import { logger } from './logger.service';
-import { parseKey } from 'sshpk';
 
 const generateKeyPair = (crypto as any).generateKeyPair;
 const chunkSizes = [getChunkSize(keyConfig.size), getChunkSize(keyConfig.size, false)];
@@ -16,17 +15,27 @@ function getChunkSize(keyBits: number, forSourceText = true) {
   return forSourceText ? size - 42 : size;
 }
 
-export interface RsaKey {
+export interface RsaKeyPair {
   publicKey: string;
   privateKey: string;
 }
 
-export function generateKeys(): Promise<RsaKey> {
+export const generateKeyFormats = {
+  publicKeyEncoding: {
+    type: 'pkcs1',
+    format: 'pem',
+  },
+  privateKeyEncoding: {
+    type: 'pkcs1',
+    format: 'pem',
+  },
+};
+
+export function generateKeys(): Promise<RsaKeyPair> {
   return new Promise((resolve, reject) => {
     generateKeyPair(keyConfig.type, {
       modulusLength: keyConfig.size,
-      publicKeyEncoding: keyConfig.serverKey,
-      privateKeyEncoding: keyConfig.serverKey,
+      ...generateKeyFormats,
     }, (err: any | null | undefined, publicKey: string, privateKey: string) => {
       if (err) {
         reject(err);
@@ -74,11 +83,13 @@ export const keyExpiration = {
     const timeout = setTimeout(() => {
       let error = null;
       let user = null;
+      let timeout;
+      let callback;
       try {
         user = storage.get(userName);
         user.deleteKeys();
 
-        const [timeout, callback] = scheduledExpirations.get(userName)!;
+        [timeout, callback] = scheduledExpirations.get(userName)!;
         // FIXME: maybe not needed
         clearTimeout(timeout);
       } catch (err) {
@@ -129,7 +140,7 @@ export const keyExpiration = {
   },
 };
 
-storage.on('delete', (user: User) => {
+storage.on('deleted', (user: User) => {
   keyExpiration.delete(user.name);
   logger.log(`keyExpiration for ${user.name} is deleted`);
 });
@@ -163,26 +174,108 @@ storage.on('delete', (user: User) => {
 //   scheduled[1] = callback;
 // }
 
-export function checkKeySize(key: string) {
-  return parseKey(key, 'auto').size !== keyConfig.size;
+export class PublicKey {
+  static allowedKeySources: ReadonlyArray<string> = [
+    'string',
+    'object',
+  ];
+  static allowedStringKeyFormats: ReadonlyArray<string> = [
+    'pkcs1-public-pem',
+    'base64',
+  ];
+
+  readonly components: Readonly<{
+    e: number;
+    n: Buffer;
+  }>;
+  private _rsaKey: RsaKey;
+
+  constructor(source: any, format?: string) {
+    const sourceType = typeof source;
+    this._rsaKey = new RsaKey();
+    switch (sourceType) {
+      case 'string':
+        switch (format) {
+          case 'base64': {
+            const obj = JSON.parse(Buffer.from(source).toString('utf8'));
+            this.importFromObject(obj);
+            break;
+          }
+
+          case 'pkcs1-public-pem': {
+            this._rsaKey.importKey(source, format);
+            break;
+          }
+
+          default:
+            throw new LogicError(
+              ErrorCode.SERVER,
+              `Format ${format} must be in `
+                + `${JSON.stringify(PublicKey.allowedStringKeyFormats)}, not ${format}`,
+            );
+        }
+        break;
+
+      case 'object':
+        this.importFromObject(source);
+        break;
+
+      default:
+        throw new LogicError(
+          ErrorCode.SERVER,
+          `Source ${format} must of type in `
+          + `${JSON.stringify(PublicKey.allowedKeySources)}, not ${sourceType}`,
+        );
+    }
+    if (this._rsaKey.getKeySize() !== keyConfig.size) {
+      throw new LogicError(ErrorCode.KEY_SIZE);
+    }
+
+    const components = this._rsaKey.exportKey('components-public-der');
+    this.components = {
+      n: components.n,
+      e: components.e instanceof Buffer
+        // FIXME: May be not Little Endian
+        ? components.e.readUIntLE(0, components.e.length)
+        : components.e,
+    };
+  }
+
+  private importFromObject(obj: any) {
+    if (!(
+      typeof obj === 'object'
+      && typeof obj.e === 'number'
+      && (
+        Array.isArray(obj.n)
+        || obj.n instanceof Buffer
+      )
+    )) {
+      throw new LogicError(ErrorCode.KEY_BAD);
+    }
+
+    this._rsaKey.importKey(obj, 'components-public');
+  }
+
+  toString() {
+    return this._rsaKey.exportKey('pkcs1-public-pem');
+  }
+
+  toJSON() {
+    return {
+      e: this.components,
+      n: [...this.components.n.values()],
+    };
+  }
 }
 
 export function saveKeysForUser(
   userNameOrUser: string | User,
-  foreignPublicKey: string,
-  serverKeys: RsaKey,
-  foreignChecked = false,
+  serverKeys: RsaKeyPair,
+  foreignPublicKey: PublicKey,
 ) {
-  if (
-    !foreignChecked
-    && parseKey(foreignPublicKey, 'auto').size !== keyConfig.size
-  ) {
-    throw new LogicError(ErrorCode.KEY_SIZE);
-  }
-
   const user = typeof userNameOrUser === 'string'
     ? storage.get(userNameOrUser)
     : userNameOrUser;
-  user.updateKeys(foreignPublicKey, serverKeys.privateKey);
+  user.updateKeys(foreignPublicKey.toString(), serverKeys.privateKey);
   return user;
 }

@@ -4,6 +4,8 @@ export class User {
   readonly name: string;
   protected _encryptKey: string;
   protected _decryptKey: string;
+  // public localPublicKey: string = '';
+  // public remotePrivateKey: string = '';
   protected _updatedAt: number;
   protected _lastLoggedIn: number;
 
