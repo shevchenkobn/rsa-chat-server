@@ -204,7 +204,7 @@ export class PublicKey {
 
       case 'object':
         if (format === 'base64') {
-          source.n = JSON.parse(Buffer.from(source.n).toString('utf8'));
+          source.n = JSON.parse(Buffer.from(source.n, 'base64').toString('utf8'));
         }
         this.importFromObject(source);
         break;
