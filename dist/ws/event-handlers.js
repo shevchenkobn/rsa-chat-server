@@ -10,10 +10,15 @@ exports.subscribers = new Map([
                 client.emit('error', new errors_service_1.LogicError(errors_service_1.ErrorCode.MSG_BAD));
                 return;
             }
-            const sampleMsg = Buffer.from('Hello, fuckers))))').toString('base64');
-            const encrypted = key_manager_service_1.encrypt(client.user.encryptKey, Buffer.from(sampleMsg, 'base64'));
-            logger_service_1.logger.debug(encrypted.toString('base64'));
-            logger_service_1.logger.debug(key_manager_service_1.decrypt(client.user.remotePrivateKey, encrypted).toString('utf8'));
+            // const sampleMsg = Buffer.from('Hello, fuckers))))').toString('base64');
+            // const encrypted = encrypt(client.user.encryptKey, Buffer.from(sampleMsg, 'base64'));
+            // logger.debug(encrypted.toString('base64'));
+            // logger.debug(
+            //   decrypt(
+            //     client.user.remotePrivateKey,
+            //     encrypted,
+            //   ).toString('utf8'),
+            // );
             const msgBuffer = key_manager_service_1.decrypt(client.user.decryptKey, Buffer.from(payload.message, 'base64'));
             hub.broadcast('message-received', [], msgBuffer, client.user.name);
         }],

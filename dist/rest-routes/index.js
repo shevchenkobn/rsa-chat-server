@@ -43,23 +43,23 @@ exports.router.get('/key/info', (req, res) => {
 });
 exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res, next) => {
     logger_service_1.logger.log('Key generating');
-    if (!(req.body instanceof Object)
-        || typeof req.body['public-key'] !== 'string'
-        || !req.body['public-key'].trim()) {
-        logger_service_1.logger.log('Bad object');
+    if (!(req.body instanceof Object)) {
+        logger_service_1.logger.log('Body is not object');
         next(new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_BAD));
         return;
     }
-    const foreignPublicKey = req.body['public-key'];
+    let foreignPublicKey;
     try {
-        if (!key_manager_service_1.checkKeySize(foreignPublicKey)) {
-            next(new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_SIZE));
-            return;
-        }
+        foreignPublicKey = new key_manager_service_1.PublicKey(req.body['public-key'], 'base64');
     }
     catch (err) {
         logger_service_1.logger.error(err);
-        next(new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_BAD));
+        if (err instanceof errors_service_1.LogicError && err.code === errors_service_1.ErrorCode.KEY_SIZE) {
+            next(err);
+        }
+        else {
+            next(new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_BAD));
+        }
         return;
     }
     if (key_manager_service_1.keyExpiration.has(req.user.name)) {
@@ -68,14 +68,14 @@ exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res,
     }
     const rsaPair = await key_manager_service_1.generateKeys();
     logger_service_1.logger.log(`My public key:\n${rsaPair.publicKey}`);
-    logger_service_1.logger.log(`My private key:\n${rsaPair.privateKey}`);
+    // logger.log(`My private key:\n${rsaPair.privateKey}`);
     logger_service_1.logger.log(`Client's public key:\n${foreignPublicKey}`);
-    key_manager_service_1.saveKeysForUser(req.user, foreignPublicKey, rsaPair, true);
-    req.user.localPublicKey = rsaPair.publicKey;
-    req.user.remotePrivateKey = req.body['private-key'];
-    logger_service_1.logger.log(`Client's private key:\n${req.user.remotePrivateKey}`);
+    key_manager_service_1.saveKeysForUser(req.user, rsaPair, foreignPublicKey);
+    // req.user.localPublicKey = rsaPair.publicKey;
+    // req.user.remotePrivateKey = req.body['private-key'];
+    // logger.log(`Client's private key:\n${req.user.remotePrivateKey}`);
     res.json({
-        'public-key': rsaPair.publicKey,
+        'public-key': new key_manager_service_1.PublicKey(rsaPair.publicKey, 'pkcs1-public-pem').toJSON(),
     });
 }));
 /**

@@ -2,18 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const errors_service_1 = require("./errors.service");
 class User {
-    constructor(name, encryptKey = '', decryptKey = '') {
-        this.localPublicKey = '';
-        this.remotePrivateKey = '';
-        if (!name.trim()) {
-            throw new errors_service_1.LogicError(errors_service_1.ErrorCode.AUTH_EMPTY_NAME);
-        }
-        this.name = name;
-        this._encryptKey = encryptKey;
-        this._decryptKey = decryptKey;
-        this._updatedAt = Date.now();
-        this._lastLoggedIn = this._updatedAt;
-    }
     get encryptKey() {
         if (!this._encryptKey) {
             throw new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_BAD);
@@ -31,6 +19,16 @@ class User {
     }
     get lastLoggedIn() {
         return new Date(this._lastLoggedIn);
+    }
+    constructor(name, encryptKey = '', decryptKey = '') {
+        if (!name.trim()) {
+            throw new errors_service_1.LogicError(errors_service_1.ErrorCode.AUTH_EMPTY_NAME);
+        }
+        this.name = name;
+        this._encryptKey = encryptKey;
+        this._decryptKey = decryptKey;
+        this._updatedAt = Date.now();
+        this._lastLoggedIn = this._updatedAt;
     }
     hasKeys() {
         return !!this._encryptKey && !!this._decryptKey;
