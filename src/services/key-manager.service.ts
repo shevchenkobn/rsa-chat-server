@@ -179,7 +179,7 @@ export class PublicKey {
     'string',
     'object',
   ];
-  static allowedStringKeyFormats: ReadonlyArray<string> = [
+  static allowedKeyFormats: ReadonlyArray<string> = [
     'pkcs1-public-pem',
     'base64',
   ];
@@ -195,28 +195,17 @@ export class PublicKey {
     this._rsaKey = new RsaKey();
     switch (sourceType) {
       case 'string':
-        switch (format) {
-          case 'base64': {
-            const obj = JSON.parse(Buffer.from(source).toString('utf8'));
-            this.importFromObject(obj);
-            break;
-          }
-
-          case 'pkcs1-public-pem': {
-            this._rsaKey.importKey(source, format);
-            break;
-          }
-
-          default:
-            throw new LogicError(
-              ErrorCode.SERVER,
-              `Format ${format} must be in `
-                + `${JSON.stringify(PublicKey.allowedStringKeyFormats)}, not ${format}`,
-            );
+        if (format === 'pkcs1-public-pem') {
+          this._rsaKey.importKey(source, format);
+        } else {
+          throw new LogicError(ErrorCode.SERVER, `Only pkcs1-public-pem is allowed, not ${format}`);
         }
         break;
 
       case 'object':
+        if (format === 'base64') {
+          source.n = JSON.parse(Buffer.from(source.n).toString('utf8'));
+        }
         this.importFromObject(source);
         break;
 
