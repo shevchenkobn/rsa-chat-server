@@ -10,7 +10,13 @@ import { logger } from '../services/logger.service';
 
 export const subscribers = new Map<string, EventHandler>([
   ['message-sent', (client, hub, payload?: any | null) => {
-    if (!(payload instanceof Object && typeof payload.message === 'string')) {
+    if (!(
+      payload instanceof Object
+      && (
+        typeof payload.message === 'string'
+        || Array.isArray(payload.message)
+      )
+    )) {
       logger.error('Ill-formed message');
       client.emit('error', new LogicError(ErrorCode.MSG_BAD));
       return;
@@ -35,7 +41,8 @@ export const emitters = new Map<string, EventHandler>([
   ['message-received', (client, hub, msg: Buffer, username: string) => {
     client.emit('message-received', {
       username,
-      message: encrypt(client.user.encryptKey, msg).toString('base64'),
+      // message: encrypt(client.user.encryptKey, msg).toString('base64'),
+      message: [...encrypt(client.user.encryptKey, msg).values()],
     });
   }],
 
