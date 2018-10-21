@@ -21,7 +21,13 @@ exports.subscribers = new Map([
             //     encrypted,
             //   ).toString('utf8'),
             // );
-            const msgBuffer = key_manager_service_1.decrypt(client.user.decryptKey, Buffer.from(payload.message, 'base64'));
+            let srcBuffer = Buffer.from(payload.message, 'base64');
+            // srcBuffer = srcBuffer.slice(
+            //   0,
+            //   srcBuffer.length - srcBuffer.length % 512,
+            // );
+            // logger.debug(srcBuffer.length);
+            const msgBuffer = key_manager_service_1.decrypt(client.user.decryptKey, srcBuffer);
             hub.broadcast('message-received', [], msgBuffer, client.user.name);
         }],
 ]);

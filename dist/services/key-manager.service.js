@@ -37,9 +37,14 @@ function generateKeys() {
 exports.generateKeys = generateKeys;
 function encrypt(key, buffer) {
     const buffers = [];
-    const [chunkSize] = chunkSizes;
+    const [, chunkSize] = chunkSizes;
+    logger_service_1.logger.debug(buffer.length, chunkSize);
     for (let i = 0; i < buffer.length; i += chunkSize) {
-        buffers.push(crypto_1.publicEncrypt(key, buffer.slice(i, i + chunkSize)));
+        logger_service_1.logger.debug(`${i} - ${i + chunkSize}`);
+        buffers.push(crypto_1.publicEncrypt({
+            key,
+            padding: crypto.constants.RSA_NO_PADDING,
+        }, buffer.slice(i, i + chunkSize)));
     }
     return Buffer.concat(buffers);
 }
@@ -48,7 +53,10 @@ function decrypt(key, buffer) {
     const buffers = [];
     const [, chunkSize] = chunkSizes;
     for (let i = 0; i < buffer.length; i += chunkSize) {
-        buffers.push(crypto_1.privateDecrypt(key, buffer.slice(i, i + chunkSize)));
+        buffers.push(crypto_1.privateDecrypt({
+            key,
+            padding: crypto.constants.RSA_NO_PADDING,
+        }, buffer.slice(i, i + chunkSize)));
     }
     return Buffer.concat(buffers);
 }
@@ -118,34 +126,6 @@ user_storage_service_1.storage.on('deleted', (user) => {
     exports.keyExpiration.delete(user.name);
     logger_service_1.logger.log(`keyExpiration for ${user.name} is deleted`);
 });
-// export function scheduleExpiration(userName: string, callback?: KeyExpiredCallback) {
-//   if (scheduledExpirations.has(userName)) {
-//     throw new LogicError(ErrorCode.SERVER);
-//   }
-//   const timeout = setTimeout(() => {
-//     const user = storage.get(userName);
-//     user.deleteKeys();
-//     scheduledExpirations.delete(userName);
-//     // FIXME: maybe not needed
-//     clearTimeout(timeout);
-//
-//     const callback = scheduledExpirations.get(userName)![1];
-//     if (callback) {
-//       callback(user);
-//     }
-//   }, keyConfig.expireTime);
-//   scheduledExpirations.set(userName, [timeout, callback]);
-// }
-//
-// export function setExpirationCallback(userName: string, callback?: KeyExpiredCallback) {
-//   const scheduled = scheduledExpirations.get(userName);
-//   if (!scheduled) {
-//     logger.warn(`No scheduled key removal for ${userName}`);
-//     return;
-//   }
-//
-//   scheduled[1] = callback;
-// }
 class PublicKey {
     constructor(source, format) {
         const sourceType = typeof source;
@@ -160,7 +140,12 @@ class PublicKey {
                 }
                 break;
             case 'object':
-                if (typeof source.n === 'string' && format === 'base64') {
+                if (format === 'pkcs1-public-der' && source instanceof Buffer) {
+                    this._rsaKey.importKey(source, format);
+                    break;
+                }
+                if (typeof source.n === 'string'
+                    && format === 'base64') {
                     source.n = Buffer.from(source.n, 'base64');
                 }
                 this.importFromObject(source);
@@ -169,12 +154,14 @@ class PublicKey {
                 throw new errors_service_1.LogicError(errors_service_1.ErrorCode.SERVER, `Source ${format} must of type in `
                     + `${JSON.stringify(PublicKey.allowedKeySources)}, not ${sourceType}`);
         }
-        if (this._rsaKey.getKeySize() !== config_1.keyConfig.size) {
-            throw new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_SIZE);
-        }
+        // if (this._rsaKey.getKeySize() !== keyConfig.size) {
+        //   throw new LogicError(ErrorCode.KEY_SIZE);
+        // }
         const components = this._rsaKey.exportKey('components-public-der');
         this.components = {
-            n: components.n,
+            n: components.n[0] === 0
+                ? components.n.slice(1)
+                : components.n,
             e: components.e instanceof Buffer
                 // FIXME: May be not Little Endian
                 ? components.e.readUIntLE(0, components.e.length)
@@ -193,9 +180,12 @@ class PublicKey {
     toString() {
         return this._rsaKey.exportKey('pkcs1-public-pem');
     }
+    toBuffer() {
+        return this._rsaKey.exportKey('pkcs1-public-der');
+    }
     toJSON() {
         return {
-            e: this.components,
+            e: this.components.e,
             n: [...this.components.n.values()],
         };
     }
@@ -205,6 +195,7 @@ PublicKey.allowedKeySources = [
     'object',
 ];
 PublicKey.allowedKeyFormats = [
+    'pkcs1-public-der',
     'pkcs1-public-pem',
     'base64',
 ];

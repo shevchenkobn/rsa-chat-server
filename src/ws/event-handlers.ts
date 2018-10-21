@@ -3,7 +3,7 @@ import {
   decrypt,
   encrypt,
   keyExpiration,
-  KeyExpiredCallback
+  KeyExpiredCallback,
 } from '../services/key-manager.service';
 import { ErrorCode, LogicError } from '../services/errors.service';
 import { logger } from '../services/logger.service';
@@ -31,8 +31,13 @@ export const subscribers = new Map<string, EventHandler>([
     //     encrypted,
     //   ).toString('utf8'),
     // );
-
-    const msgBuffer = decrypt(client.user.decryptKey, Buffer.from(payload.message, 'base64'));
+    let srcBuffer = Buffer.from(payload.message, 'base64');
+    // srcBuffer = srcBuffer.slice(
+    //   0,
+    //   srcBuffer.length - srcBuffer.length % 512,
+    // );
+    // logger.debug(srcBuffer.length);
+    const msgBuffer = decrypt(client.user.decryptKey as string, srcBuffer);
     hub.broadcast('message-received', [], msgBuffer, client.user.name);
   }],
 ]);
@@ -42,7 +47,7 @@ export const emitters = new Map<string, EventHandler>([
     client.emit('message-received', {
       username,
       // message: encrypt(client.user.encryptKey, msg).toString('base64'),
-      message: [...encrypt(client.user.encryptKey, msg).values()],
+      message: [...encrypt(client.user.encryptKey as string, msg).values()],
     });
   }],
 

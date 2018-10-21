@@ -34,10 +34,10 @@ class User {
         return !!this._encryptKey && !!this._decryptKey;
     }
     updateKeys(encryptKey, decryptKey) {
-        if (!encryptKey) {
+        if (!encryptKey || !encryptKey.length) {
             throw new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_BAD, 'Bad encrypt key');
         }
-        if (!decryptKey) {
+        if (!decryptKey || !encryptKey.length) {
             throw new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_BAD, 'Bad decrypt key');
         }
         this._decryptKey = decryptKey;

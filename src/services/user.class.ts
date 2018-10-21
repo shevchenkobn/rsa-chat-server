@@ -2,8 +2,8 @@ import { ErrorCode, LogicError } from './errors.service';
 
 export class User {
   readonly name: string;
-  protected _encryptKey: string;
-  protected _decryptKey: string;
+  protected _encryptKey: string | Buffer;
+  protected _decryptKey: string | Buffer;
   // public localPublicKey: string = '';
   // public remotePrivateKey: string = '';
   protected _updatedAt: number;
@@ -46,11 +46,11 @@ export class User {
     return !!this._encryptKey && !!this._decryptKey;
   }
 
-  updateKeys(encryptKey: string, decryptKey: string) {
-    if (!encryptKey) {
+  updateKeys(encryptKey: string | Buffer, decryptKey: string | Buffer) {
+    if (!encryptKey || !encryptKey.length) {
       throw new LogicError(ErrorCode.KEY_BAD, 'Bad encrypt key');
     }
-    if (!decryptKey) {
+    if (!decryptKey || !encryptKey.length) {
       throw new LogicError(ErrorCode.KEY_BAD, 'Bad decrypt key');
     }
 

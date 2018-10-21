@@ -90,7 +90,7 @@ class MessageHub {
         if (!emit) {
             throw new Error(`Bad emit event: ${event}`);
         }
-        const clientsToBroadcast = this.clients.filter(client => !excludeClients.indexOf(client));
+        const clientsToBroadcast = this.clients.filter(client => !excludeClients.includes(client));
         for (const client of clientsToBroadcast) {
             emit(client, this, ...args);
         }

@@ -67,15 +67,18 @@ exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res,
         logger_service_1.logger.log('Had keys, deleting');
     }
     const rsaPair = await key_manager_service_1.generateKeys();
-    logger_service_1.logger.log(`My public key:\n${rsaPair.publicKey}`);
+    // logger.log(`My public key:\n${rsaPair.publicKey}`);
     // logger.log(`My private key:\n${rsaPair.privateKey}`);
-    logger_service_1.logger.log(`Client's public key:\n${foreignPublicKey}`);
+    // logger.log(`Client's public key:\n${foreignPublicKey}`);
     key_manager_service_1.saveKeysForUser(req.user, rsaPair, foreignPublicKey);
     // req.user.localPublicKey = rsaPair.publicKey;
     // req.user.remotePrivateKey = req.body['private-key'];
     // logger.log(`Client's private key:\n${req.user.remotePrivateKey}`);
+    const myPubk = new key_manager_service_1.PublicKey(rsaPair.publicKey, 'pkcs1-public-pem');
+    logger_service_1.logger.debug(`myPubK: ${myPubk.components.n.length}`);
+    logger_service_1.logger.debug(`forPubK: ${foreignPublicKey.components.n.length}`);
     res.json({
-        'public-key': new key_manager_service_1.PublicKey(rsaPair.publicKey, 'pkcs1-public-pem').toJSON(),
+        'public-key': myPubk.toJSON(),
     });
 }));
 /**

@@ -83,17 +83,20 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
 
   const rsaPair = await generateKeys();
 
-  logger.log(`My public key:\n${rsaPair.publicKey}`);
+  // logger.log(`My public key:\n${rsaPair.publicKey}`);
   // logger.log(`My private key:\n${rsaPair.privateKey}`);
-  logger.log(`Client's public key:\n${foreignPublicKey}`);
+  // logger.log(`Client's public key:\n${foreignPublicKey}`);
 
   saveKeysForUser(req.user, rsaPair, foreignPublicKey);
   // req.user.localPublicKey = rsaPair.publicKey;
   // req.user.remotePrivateKey = req.body['private-key'];
   // logger.log(`Client's private key:\n${req.user.remotePrivateKey}`);
 
+  const myPubk = new PublicKey(rsaPair.publicKey, 'pkcs1-public-pem');
+  logger.debug(`myPubK: ${myPubk.components.n.length}`);
+  logger.debug(`forPubK: ${foreignPublicKey.components.n.length}`);
   res.json({
-    'public-key': new PublicKey(rsaPair.publicKey, 'pkcs1-public-pem').toJSON(),
+    'public-key': myPubk.toJSON(),
   });
 }) as Handler);
 
