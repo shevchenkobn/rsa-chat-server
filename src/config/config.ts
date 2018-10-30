@@ -1,4 +1,4 @@
-const keyBitSize = 4096;
+const keyBitSize = 2048;
 
 export const keyConfig = {
   type: 'rsa',

@@ -6,14 +6,25 @@ import { storage } from './user-storage.service';
 import { ErrorCode, LogicError } from './errors.service';
 import { User } from './user.class';
 import { logger } from './logger.service';
+const CRYPTO_CONSTANTS: {[constant: string]: number} = (crypto as any).constants;
 
 const generateKeyPair = (crypto as any).generateKeyPair;
-const chunkSizes = [getChunkSize(keyConfig.size), getChunkSize(keyConfig.size, false)];
 
-function getChunkSize(keyBits: number, forSourceText = true) {
+const RSA_PADDING = new Map<number, number>([
+  [CRYPTO_CONSTANTS.RSA_PKCS1_PADDING, 11],
+  [CRYPTO_CONSTANTS.RSA_PKCS1_OAEP_PADDING, 41],
+  [CRYPTO_CONSTANTS.RSA_NO_PADDING, 0],
+]);
+
+function getChunkSize(keyBits: number, type: number) {
   const size = (keyBits / 8) >>> 0;
-  return forSourceText ? size - 42 : size;
+  return size - RSA_PADDING.get(type)!;
 }
+const chunkSizes = [
+  getChunkSize(keyConfig.size, CRYPTO_CONSTANTS.RSA_PKCS1_PADDING),
+  getChunkSize(keyConfig.size, CRYPTO_CONSTANTS.RSA_NO_PADDING),
+];
+logger.debug(chunkSizes);
 
 export interface RsaKeyPair {
   publicKey: string;
@@ -48,14 +59,14 @@ export function generateKeys(): Promise<RsaKeyPair> {
 
 export function encrypt(key: string, buffer: Buffer) {
   const buffers = [];
-  const [, chunkSize] = chunkSizes;
+  const [chunkSize] = chunkSizes;
   logger.debug(buffer.length, chunkSize);
   for (let i = 0; i < buffer.length; i += chunkSize) {
     logger.debug(`${i} - ${i + chunkSize}`);
     buffers.push(
       publicEncrypt({
         key,
-        padding: (crypto as any).constants.RSA_NO_PADDING,
+        padding: CRYPTO_CONSTANTS.RSA_PKCS1_PADDING,
       }, buffer.slice(i, i + chunkSize)),
     );
   }
@@ -66,10 +77,11 @@ export function decrypt(key: string, buffer: Buffer) {
   const buffers = [];
   const [, chunkSize] = chunkSizes;
   for (let i = 0; i < buffer.length; i += chunkSize) {
+    logger.debug(`${i} - ${i + chunkSize}`);
     buffers.push(
       privateDecrypt({
         key,
-        padding: (crypto as any).constants.RSA_NO_PADDING,
+        padding: CRYPTO_CONSTANTS.RSA_PKCS1_PADDING,
       }, buffer.slice(i, i + chunkSize)),
     );
   }
@@ -203,9 +215,10 @@ export class PublicKey {
           + `${JSON.stringify(PublicKey.allowedKeySources)}, not ${sourceType}`,
         );
     }
-    // if (this._rsaKey.getKeySize() !== keyConfig.size) {
-    //   throw new LogicError(ErrorCode.KEY_SIZE);
-    // }
+    if (this._rsaKey.getKeySize() !== keyConfig.size) {
+      logger.debug(this._rsaKey.getKeySize());
+      throw new LogicError(ErrorCode.KEY_SIZE);
+    }
 
     const components = this._rsaKey.exportKey('components-public-der');
     this.components = {
@@ -230,8 +243,11 @@ export class PublicKey {
     )) {
       throw new LogicError(ErrorCode.KEY_BAD);
     }
+    if (keyConfig.size % 8 === 0) {
+      obj.n = Buffer.concat([Buffer.alloc(1), Buffer.from(obj.n)]);
+    }
 
-    this._rsaKey.importKey(obj, 'components-public');
+    this._rsaKey.importKey(obj, 'components-public-der');
   }
 
   toString() {

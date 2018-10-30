@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const keyBitSize = 4096;
+const keyBitSize = 2048;
 exports.keyConfig = {
     type: 'rsa',
     size: keyBitSize,

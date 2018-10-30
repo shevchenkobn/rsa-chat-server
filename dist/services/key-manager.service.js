@@ -7,12 +7,22 @@ const config_1 = require("../config/config");
 const user_storage_service_1 = require("./user-storage.service");
 const errors_service_1 = require("./errors.service");
 const logger_service_1 = require("./logger.service");
+const CRYPTO_CONSTANTS = crypto.constants;
 const generateKeyPair = crypto.generateKeyPair;
-const chunkSizes = [getChunkSize(config_1.keyConfig.size), getChunkSize(config_1.keyConfig.size, false)];
-function getChunkSize(keyBits, forSourceText = true) {
+const RSA_PADDING = new Map([
+    [CRYPTO_CONSTANTS.RSA_PKCS1_PADDING, 11],
+    [CRYPTO_CONSTANTS.RSA_PKCS1_OAEP_PADDING, 41],
+    [CRYPTO_CONSTANTS.RSA_NO_PADDING, 0],
+]);
+function getChunkSize(keyBits, type) {
     const size = (keyBits / 8) >>> 0;
-    return forSourceText ? size - 42 : size;
+    return size - RSA_PADDING.get(type);
 }
+const chunkSizes = [
+    getChunkSize(config_1.keyConfig.size, CRYPTO_CONSTANTS.RSA_PKCS1_PADDING),
+    getChunkSize(config_1.keyConfig.size, CRYPTO_CONSTANTS.RSA_NO_PADDING),
+];
+logger_service_1.logger.debug(chunkSizes);
 exports.generateKeyFormats = {
     publicKeyEncoding: {
         type: 'pkcs1',
@@ -37,13 +47,13 @@ function generateKeys() {
 exports.generateKeys = generateKeys;
 function encrypt(key, buffer) {
     const buffers = [];
-    const [, chunkSize] = chunkSizes;
+    const [chunkSize] = chunkSizes;
     logger_service_1.logger.debug(buffer.length, chunkSize);
     for (let i = 0; i < buffer.length; i += chunkSize) {
         logger_service_1.logger.debug(`${i} - ${i + chunkSize}`);
         buffers.push(crypto_1.publicEncrypt({
             key,
-            padding: crypto.constants.RSA_NO_PADDING,
+            padding: CRYPTO_CONSTANTS.RSA_PKCS1_PADDING,
         }, buffer.slice(i, i + chunkSize)));
     }
     return Buffer.concat(buffers);
@@ -55,7 +65,7 @@ function decrypt(key, buffer) {
     for (let i = 0; i < buffer.length; i += chunkSize) {
         buffers.push(crypto_1.privateDecrypt({
             key,
-            padding: crypto.constants.RSA_NO_PADDING,
+            padding: CRYPTO_CONSTANTS.RSA_PKCS1_PADDING,
         }, buffer.slice(i, i + chunkSize)));
     }
     return Buffer.concat(buffers);
@@ -154,9 +164,10 @@ class PublicKey {
                 throw new errors_service_1.LogicError(errors_service_1.ErrorCode.SERVER, `Source ${format} must of type in `
                     + `${JSON.stringify(PublicKey.allowedKeySources)}, not ${sourceType}`);
         }
-        // if (this._rsaKey.getKeySize() !== keyConfig.size) {
-        //   throw new LogicError(ErrorCode.KEY_SIZE);
-        // }
+        if (this._rsaKey.getKeySize() !== config_1.keyConfig.size) {
+            logger_service_1.logger.debug(this._rsaKey.getKeySize());
+            throw new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_SIZE);
+        }
         const components = this._rsaKey.exportKey('components-public-der');
         this.components = {
             n: components.n[0] === 0
@@ -175,7 +186,10 @@ class PublicKey {
                 || obj.n instanceof Buffer))) {
             throw new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_BAD);
         }
-        this._rsaKey.importKey(obj, 'components-public');
+        if (config_1.keyConfig.size % 8 === 0) {
+            obj.n = Buffer.concat([Buffer.alloc(1), Buffer.from(obj.n)]);
+        }
+        this._rsaKey.importKey(obj, 'components-public-der');
     }
     toString() {
         return this._rsaKey.exportKey('pkcs1-public-pem');

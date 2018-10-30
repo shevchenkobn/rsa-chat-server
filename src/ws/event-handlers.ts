@@ -36,8 +36,8 @@ export const subscribers = new Map<string, EventHandler>([
     //   0,
     //   srcBuffer.length - srcBuffer.length % 512,
     // );
-    // logger.debug(srcBuffer.length);
     const msgBuffer = decrypt(client.user.decryptKey as string, srcBuffer);
+    logger.debug(JSON.stringify(msgBuffer.toString('utf8')));
     hub.broadcast('message-received', [], msgBuffer, client.user.name);
   }],
 ]);

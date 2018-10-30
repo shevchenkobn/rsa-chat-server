@@ -26,8 +26,8 @@ exports.subscribers = new Map([
             //   0,
             //   srcBuffer.length - srcBuffer.length % 512,
             // );
-            // logger.debug(srcBuffer.length);
             const msgBuffer = key_manager_service_1.decrypt(client.user.decryptKey, srcBuffer);
+            logger_service_1.logger.debug(JSON.stringify(msgBuffer.toString('utf8')));
             hub.broadcast('message-received', [], msgBuffer, client.user.name);
         }],
 ]);
