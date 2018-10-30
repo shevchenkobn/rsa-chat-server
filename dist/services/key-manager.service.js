@@ -63,6 +63,7 @@ function decrypt(key, buffer) {
     const buffers = [];
     const [, chunkSize] = chunkSizes;
     for (let i = 0; i < buffer.length; i += chunkSize) {
+        logger_service_1.logger.debug(`${i} - ${i + chunkSize}`);
         buffers.push(crypto_1.privateDecrypt({
             key,
             padding: CRYPTO_CONSTANTS.RSA_PKCS1_PADDING,

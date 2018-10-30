@@ -10,7 +10,7 @@
     "build": "rimraf ./dist && tsc",
     "start": "node ./dist",
     "start:dev": "npm run build && node --inspect=9229 ./dist",
-    "watch": "nodemon -w src/**/*.* -x 'npm run start:dev'"
+    "watch": "nodemon -w src/**/*.* -x \"npm run start:dev\""
   },
   "dependencies": {
     "body-parser": "^1.18.3",
