@@ -3,6 +3,7 @@
   "rules": {
     "variable-name": [true, "allow-leading-underscore"],
     "no-duplicate-imports": false,
-    "align": false
+    "align": false,
+    "no-increment-decrement": false
   }
 }

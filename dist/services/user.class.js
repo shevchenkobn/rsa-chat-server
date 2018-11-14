@@ -20,7 +20,7 @@ class User {
     get lastLoggedIn() {
         return new Date(this._lastLoggedIn);
     }
-    constructor(name, encryptKey = '', decryptKey = '') {
+    constructor(name, encryptKey = null, decryptKey = null) {
         if (!name.trim()) {
             throw new errors_service_1.LogicError(errors_service_1.ErrorCode.AUTH_EMPTY_NAME);
         }
@@ -46,8 +46,8 @@ class User {
         return this._updatedAt;
     }
     deleteKeys() {
-        this._decryptKey = '';
-        this._encryptKey = '';
+        this._decryptKey = null;
+        this._encryptKey = null;
         this._updatedAt = Date.now();
         return this._updatedAt;
     }

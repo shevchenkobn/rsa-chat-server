@@ -21,12 +21,12 @@ exports.subscribers = new Map([
             //     encrypted,
             //   ).toString('utf8'),
             // );
-            let srcBuffer = Buffer.from(payload.message, 'base64');
+            const srcBuffer = Buffer.from(payload.message, 'base64');
             // srcBuffer = srcBuffer.slice(
             //   0,
             //   srcBuffer.length - srcBuffer.length % 512,
             // );
-            const msgBuffer = key_manager_service_1.decrypt(client.user.decryptKey, srcBuffer);
+            const msgBuffer = key_manager_service_1.decryptEncoded(srcBuffer, client.user.decryptKey);
             logger_service_1.logger.debug(JSON.stringify(msgBuffer.toString('utf8')));
             hub.broadcast('message-received', [], msgBuffer, client.user.name);
         }],
@@ -36,7 +36,7 @@ exports.emitters = new Map([
             client.emit('message-received', {
                 username,
                 // message: encrypt(client.user.encryptKey, msg).toString('base64'),
-                message: [...key_manager_service_1.encrypt(client.user.encryptKey, msg).values()],
+                message: [...key_manager_service_1.encryptEncoded(msg, client.user.encryptKey).values()],
             });
         }],
     ['client-created', (client, hub) => {

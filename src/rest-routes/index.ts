@@ -6,10 +6,10 @@ import { User } from '../services/user.class';
 import { keyConfig } from '../config/config';
 import { logger } from '../services/logger.service';
 import {
-  generateKeys,
-  keyExpiration,
-  PublicKey,
-  saveKeysForUser,
+  getKey,
+  encrypt,
+  decrypt,
+  isNumericArray, keyExpiration,
 } from '../services/key-manager.service';
 
 export const router = Router();
@@ -63,16 +63,23 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
     return;
   }
 
-  let foreignPublicKey;
+  if (typeof req.body.key !== 'string') {
+    next(new LogicError(ErrorCode.KEY_BAD));
+    logger.error(`bad key: ${req.body['key']}`);
+    return;
+  }
+
+  let clientKey: Buffer;
   try {
-    foreignPublicKey = new PublicKey(req.body['public-key'], 'base64');
+    clientKey = Buffer.from(req.body.key, keyConfig.keyFormat.format);
   } catch (err) {
-    logger.error(err);
-    if (err instanceof LogicError && err.code === ErrorCode.KEY_SIZE) {
-      next(err);
-    } else {
-      next(new LogicError(ErrorCode.KEY_BAD));
-    }
+    next(new LogicError(ErrorCode.KEY_BAD));
+    logger.error(`bad key: ${req.body['key']}`);
+    return;
+  }
+  if (req.body.key.length === keyConfig.size) {
+    next(new LogicError(ErrorCode.KEY_SIZE));
+    logger.error(`bad key size: ${clientKey}`);
     return;
   }
 
@@ -81,22 +88,18 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
     logger.log('Had keys, deleting');
   }
 
-  const rsaPair = await generateKeys();
+  const serverKey = await getKey();
 
   // logger.log(`My public key:\n${rsaPair.publicKey}`);
   // logger.log(`My private key:\n${rsaPair.privateKey}`);
-  // logger.log(`Client's public key:\n${foreignPublicKey}`);
+  // logger.log(`Client's public key:\n${clientKey}`);
 
-  saveKeysForUser(req.user, rsaPair, foreignPublicKey);
   // req.user.localPublicKey = rsaPair.publicKey;
   // req.user.remotePrivateKey = req.body['private-key'];
   // logger.log(`Client's private key:\n${req.user.remotePrivateKey}`);
-
-  const myPubk = new PublicKey(rsaPair.publicKey, 'pkcs1-public-pem');
-  logger.debug(`myPubK: ${myPubk.components.n.length}`);
-  logger.debug(`forPubK: ${foreignPublicKey.components.n.length}`);
+  req.user.updateKeys(serverKey, clientKey);
   res.json({
-    'public-key': myPubk.toJSON(),
+    key: serverKey.toString('base64'),
   });
 }) as Handler);
 

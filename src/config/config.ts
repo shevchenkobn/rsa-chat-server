@@ -1,27 +1,12 @@
-const keyBitSize = 2048;
+const keyByteSize = 256;
 
 export const keyConfig = {
   type: 'rsa',
-  size: keyBitSize,
+  size: keyByteSize,
   expireTime: 10 * 60 * 1000,
   keyFormat: {
-    type: 'components',
-    format: {
-      e: {
-        type: 'integer',
-        minimum: 0,
-      },
-      n: {
-        type: 'array',
-        items: {
-          type: 'integer',
-          minimum: 0,
-          maximum: 255,
-        },
-        minItems: keyBitSize,
-        maxItems: keyBitSize,
-      },
-    },
+    type: 'string',
+    format: 'base64',
   },
 };
 

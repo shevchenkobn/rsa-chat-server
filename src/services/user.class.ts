@@ -1,9 +1,10 @@
 import { ErrorCode, LogicError } from './errors.service';
+import { NumericArray } from './key-manager.service';
 
 export class User {
   readonly name: string;
-  protected _encryptKey: string | Buffer;
-  protected _decryptKey: string | Buffer;
+  protected _encryptKey: NumericArray | null;
+  protected _decryptKey: NumericArray | null;
   // public localPublicKey: string = '';
   // public remotePrivateKey: string = '';
   protected _updatedAt: number;
@@ -31,7 +32,7 @@ export class User {
     return new Date(this._lastLoggedIn);
   }
 
-  constructor(name: string, encryptKey = '', decryptKey = '') {
+  constructor(name: string, encryptKey = null, decryptKey = null) {
     if (!name.trim()) {
       throw new LogicError(ErrorCode.AUTH_EMPTY_NAME);
     }
@@ -46,7 +47,7 @@ export class User {
     return !!this._encryptKey && !!this._decryptKey;
   }
 
-  updateKeys(encryptKey: string | Buffer, decryptKey: string | Buffer) {
+  updateKeys(encryptKey: NumericArray, decryptKey: NumericArray) {
     if (!encryptKey || !encryptKey.length) {
       throw new LogicError(ErrorCode.KEY_BAD, 'Bad encrypt key');
     }
@@ -62,8 +63,8 @@ export class User {
   }
 
   deleteKeys() {
-    this._decryptKey = '';
-    this._encryptKey = '';
+    this._decryptKey = null;
+    this._encryptKey = null;
     this._updatedAt = Date.now();
 
     return this._updatedAt;

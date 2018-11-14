@@ -1,7 +1,7 @@
 import { EventHandler, MessageHub } from './message-hub.class';
 import {
-  decrypt,
-  encrypt,
+  decryptEncoded,
+  encrypt, encryptEncoded,
   keyExpiration,
   KeyExpiredCallback,
 } from '../services/key-manager.service';
@@ -31,12 +31,12 @@ export const subscribers = new Map<string, EventHandler>([
     //     encrypted,
     //   ).toString('utf8'),
     // );
-    let srcBuffer = Buffer.from(payload.message, 'base64');
+    const srcBuffer = Buffer.from(payload.message, 'base64');
     // srcBuffer = srcBuffer.slice(
     //   0,
     //   srcBuffer.length - srcBuffer.length % 512,
     // );
-    const msgBuffer = decrypt(client.user.decryptKey as string, srcBuffer);
+    const msgBuffer = decryptEncoded(srcBuffer, client.user.decryptKey);
     logger.debug(JSON.stringify(msgBuffer.toString('utf8')));
     hub.broadcast('message-received', [], msgBuffer, client.user.name);
   }],
@@ -47,7 +47,7 @@ export const emitters = new Map<string, EventHandler>([
     client.emit('message-received', {
       username,
       // message: encrypt(client.user.encryptKey, msg).toString('base64'),
-      message: [...encrypt(client.user.encryptKey as string, msg).values()],
+      message: [...encryptEncoded(msg, client.user.encryptKey).values()],
     });
   }],
 
