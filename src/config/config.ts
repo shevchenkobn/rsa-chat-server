@@ -1,7 +1,7 @@
 const keyByteSize = 256;
 
 export const keyConfig = {
-  type: 'rsa',
+  type: 'one-way-pad',
   size: keyByteSize,
   expireTime: 10 * 60 * 1000,
   keyFormat: {
