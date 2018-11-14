@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const keyByteSize = 256;
 exports.keyConfig = {
-    type: 'rsa',
+    type: 'one-way-pad',
     size: keyByteSize,
     expireTime: 10 * 60 * 1000,
     keyFormat: {
