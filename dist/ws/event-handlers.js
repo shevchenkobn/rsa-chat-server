@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const key_manager_service_1 = require("../services/key-manager.service");
 const errors_service_1 = require("../services/errors.service");
 const logger_service_1 = require("../services/logger.service");
+const config_1 = require("../config/config");
 exports.subscribers = new Map([
     ['message-sent', (client, hub, payload) => {
             if (!(payload instanceof Object
@@ -21,7 +22,7 @@ exports.subscribers = new Map([
             //     encrypted,
             //   ).toString('utf8'),
             // );
-            const srcBuffer = Buffer.from(payload.message, 'base64');
+            const srcBuffer = Buffer.from(payload.message, config_1.keyConfig.keyFormat.format);
             // srcBuffer = srcBuffer.slice(
             //   0,
             //   srcBuffer.length - srcBuffer.length % 512,
@@ -36,7 +37,7 @@ exports.emitters = new Map([
             client.emit('message-received', {
                 username,
                 // message: encrypt(client.user.encryptKey, msg).toString('base64'),
-                message: [...key_manager_service_1.encryptEncoded(msg, client.user.encryptKey).values()],
+                message: key_manager_service_1.encryptEncoded(msg, client.user.encryptKey).toString(config_1.keyConfig.keyFormat.format),
             });
         }],
     ['client-created', (client, hub) => {

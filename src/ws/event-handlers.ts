@@ -7,6 +7,7 @@ import {
 } from '../services/key-manager.service';
 import { ErrorCode, LogicError } from '../services/errors.service';
 import { logger } from '../services/logger.service';
+import { keyConfig } from '../config/config';
 
 export const subscribers = new Map<string, EventHandler>([
   ['message-sent', (client, hub, payload?: any | null) => {
@@ -31,7 +32,7 @@ export const subscribers = new Map<string, EventHandler>([
     //     encrypted,
     //   ).toString('utf8'),
     // );
-    const srcBuffer = Buffer.from(payload.message, 'base64');
+    const srcBuffer = Buffer.from(payload.message, keyConfig.keyFormat.format);
     // srcBuffer = srcBuffer.slice(
     //   0,
     //   srcBuffer.length - srcBuffer.length % 512,
@@ -47,7 +48,7 @@ export const emitters = new Map<string, EventHandler>([
     client.emit('message-received', {
       username,
       // message: encrypt(client.user.encryptKey, msg).toString('base64'),
-      message: [...encryptEncoded(msg, client.user.encryptKey).values()],
+      message: encryptEncoded(msg, client.user.encryptKey).toString(keyConfig.keyFormat.format),
     });
   }],
 
