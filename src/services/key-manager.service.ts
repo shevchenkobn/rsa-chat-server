@@ -128,6 +128,7 @@ const charTable = new class {
 
   constructor() {
     const frequentCharsCodes = [97, 116, 111, 110, 101, 115, 105, 114];
+    const specialCodes = [100];
     this._table = [[32, 0]];
 
     const start = frequentCharsCodes.length * 10 + 11;
@@ -137,13 +138,15 @@ const charTable = new class {
         this._table.push([i, frequentCode + 1]);
       } else {
         const frequentOffset = frequentCharsCodes.reduce((sum, c) => c < i ? sum + 1 : sum, 0);
-        const code = start + i - 97 - frequentOffset % 100;
+        let code = start + i - 97 - frequentOffset;
+        code += specialCodes.reduce((sum, c) => c <= code ? sum + 1 : sum, 0);
         this._table.push([i, code]);
       }
     }
 
     this._oneDigitCodes = this._table
-      .filter(([char]) => frequentCharsCodes.includes(char)).map(([, code]) => code);
+      .filter(([char]) => frequentCharsCodes.includes(char))
+      .map(([, code]) => code);
   }
 
   byChar(c: number) {
