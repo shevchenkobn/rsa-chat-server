@@ -9,7 +9,7 @@ import {
   getKey,
   encrypt,
   decrypt,
-  isNumericArray, keyExpiration,
+  isNumericArray, keyExpiration, normalizeKey,
 } from '../services/key-manager.service';
 
 export const router = Router();
@@ -71,7 +71,7 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
 
   let clientKey: Buffer;
   try {
-    clientKey = Buffer.from(req.body.key, keyConfig.keyFormat.format);
+    clientKey = normalizeKey(Buffer.from(req.body.key, keyConfig.keyFormat.format)) as Buffer;
   } catch (err) {
     next(new LogicError(ErrorCode.KEY_BAD));
     logger.error(`bad key: ${req.body['key']}`);

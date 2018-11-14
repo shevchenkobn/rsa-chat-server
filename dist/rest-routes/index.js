@@ -55,7 +55,7 @@ exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res,
     }
     let clientKey;
     try {
-        clientKey = Buffer.from(req.body.key, config_1.keyConfig.keyFormat.format);
+        clientKey = key_manager_service_1.normalizeKey(Buffer.from(req.body.key, config_1.keyConfig.keyFormat.format));
     }
     catch (err) {
         next(new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_BAD));
