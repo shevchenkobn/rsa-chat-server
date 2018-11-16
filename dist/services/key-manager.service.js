@@ -96,12 +96,12 @@ function prepareEncode(message, inputEncoding = 'utf8') {
     return encoded;
 }
 exports.prepareEncode = prepareEncode;
-function finalizeDecode(message, outputEncoding = 'base64') {
+function finalizeDecode(message, outputEncoding = 'base64', trimEnd = true) {
     const decoded = Buffer.from(message);
     let j = 0;
     for (let i = 0; i < message.length; i++, j++) {
         let code = decoded[i];
-        if (charTable.isOneDigitCode(code)) {
+        if (charTable.isOneDigitCode(code) || i === decoded.length - 1) {
             decoded[j] = charTable.byCode(code);
         }
         else {
@@ -113,14 +113,24 @@ function finalizeDecode(message, outputEncoding = 'base64') {
             decoded[j] = charTable.byCode(code);
         }
     }
+    if (trimEnd) {
+        const spaceCode = 32;
+        for (; j - 1 >= 0 && decoded[j - 1] === spaceCode; j--)
+            ;
+    }
     return decoded.toString(outputEncoding, 0, j);
 }
 exports.finalizeDecode = finalizeDecode;
-function encryptEncoded(msgBuffer, key, strictKey = false) {
+function encryptEncoded(msgBuffer, key, strictKey = false, fitToKey = true) {
     if (!isNumericArray(key)) {
         throw new TypeError('key is not numeric array');
     }
-    const encrypted = Buffer.from(msgBuffer);
+    const encrypted = Buffer.alloc(fitToKey
+        ? key.length * Math.floor((msgBuffer.length - 1) / key.length + 1)
+        : msgBuffer.length, 0);
+    for (let i = 0; i < msgBuffer.length; i++) {
+        encrypted[i] = msgBuffer[i];
+    }
     if (strictKey && encrypted.length <= key.length) {
         throw new TypeError('strictKey: message length exceeds key\'s');
     }
@@ -144,12 +154,12 @@ function decryptEncoded(msg, key, strictKey = false) {
     return decrypted;
 }
 exports.decryptEncoded = decryptEncoded;
-function encrypt(msg, key, strictKey = false, inputEncoding = 'utf8') {
-    return encryptEncoded(prepareEncode(msg, inputEncoding), key, strictKey);
+function encrypt(msg, key, strictKey = false, inputEncoding = 'utf8', fitToKey = true) {
+    return encryptEncoded(prepareEncode(msg, inputEncoding), key, strictKey, fitToKey);
 }
 exports.encrypt = encrypt;
-function decrypt(msg, key, strictKey = false, outputEncoding = 'utf8') {
-    return finalizeDecode(decryptEncoded(msg, key, strictKey), outputEncoding);
+function decrypt(msg, key, strictKey = false, outputEncoding = 'utf8', trimEnd = true) {
+    return finalizeDecode(decryptEncoded(msg, key, strictKey), outputEncoding, trimEnd);
 }
 exports.decrypt = decrypt;
 const scheduledExpirations = new Map();

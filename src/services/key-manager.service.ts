@@ -99,7 +99,7 @@ export function isNumericArray(arr: unknown): arr is NumericArray {
 }
 
 export async function getKey(size = keyConfig.size): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
+  return new Promise<Buffer>((resolve, reject) => {
     randomBytes(size, (err, buf) => {
       if (err) {
         reject(err);
@@ -194,13 +194,13 @@ export function prepareEncode(message: string, inputEncoding = 'utf8') {
   return encoded;
 }
 
-export function finalizeDecode(message: NumericArray, outputEncoding = 'base64') {
+export function finalizeDecode(message: NumericArray, outputEncoding = 'base64', trimEnd = true) {
   const decoded = Buffer.from(message as Buffer);
 
   let j = 0;
   for (let i = 0; i < message.length; i++, j++) {
     let code = decoded[i];
-    if (charTable.isOneDigitCode(code)) {
+    if (charTable.isOneDigitCode(code) || i === decoded.length - 1) {
       decoded[j] = charTable.byCode(code);
     } else {
       i++;
@@ -211,6 +211,10 @@ export function finalizeDecode(message: NumericArray, outputEncoding = 'base64')
       decoded[j] = charTable.byCode(code);
     }
   }
+  if (trimEnd) {
+    const spaceCode = 32;
+    for (; j - 1 >= 0 && decoded[j - 1] === spaceCode; j--);
+  }
   return decoded.toString(outputEncoding, 0, j);
 }
 
@@ -218,12 +222,21 @@ export function encryptEncoded(
   msgBuffer: NumericArray,
   key: NumericArray,
   strictKey = false,
+  fitToKey = true,
 ) {
   if (!isNumericArray(key)) {
     throw new TypeError('key is not numeric array');
   }
 
-  const encrypted = Buffer.from(msgBuffer as Buffer);
+  const encrypted = Buffer.alloc(
+    fitToKey
+      ? key.length * Math.floor((msgBuffer.length - 1) / key.length + 1)
+      : msgBuffer.length,
+    0,
+  );
+  for (let i = 0; i < msgBuffer.length; i++) {
+    encrypted[i] = msgBuffer[i];
+  }
 
   if (strictKey && encrypted.length <= key.length) {
     throw new TypeError('strictKey: message length exceeds key\'s');
@@ -249,8 +262,14 @@ export function decryptEncoded(msg: NumericArray, key: NumericArray, strictKey =
   return decrypted;
 }
 
-export function encrypt(msg: string, key: NumericArray, strictKey = false, inputEncoding = 'utf8') {
-  return encryptEncoded(prepareEncode(msg, inputEncoding), key, strictKey);
+export function encrypt(
+  msg: string,
+  key: NumericArray,
+  strictKey = false,
+  inputEncoding = 'utf8',
+  fitToKey = true,
+) {
+  return encryptEncoded(prepareEncode(msg, inputEncoding), key, strictKey, fitToKey);
 }
 
 export function decrypt(
@@ -258,8 +277,9 @@ export function decrypt(
   key: NumericArray,
   strictKey = false,
   outputEncoding = 'utf8',
+  trimEnd = true,
 ) {
-  return finalizeDecode(decryptEncoded(msg, key, strictKey), outputEncoding);
+  return finalizeDecode(decryptEncoded(msg, key, strictKey), outputEncoding, trimEnd);
 }
 
 export type KeyExpiredCallback = (err: any | null, user: User | null) => void;
