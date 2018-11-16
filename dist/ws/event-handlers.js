@@ -28,12 +28,13 @@ exports.subscribers = new Map([
             //   srcBuffer.length - srcBuffer.length % 512,
             // );
             const msgBuffer = key_manager_service_1.decryptEncoded(srcBuffer, client.user.decryptKey);
-            logger_service_1.logger.debug(JSON.stringify(msgBuffer.toString('utf8')));
             hub.broadcast('message-received', [], msgBuffer, client.user.name);
         }],
 ]);
 exports.emitters = new Map([
     ['message-received', (client, hub, msg, username) => {
+            // const message = encryptEncoded(msg, client.user.encryptKey).toString(keyConfig.keyFormat.format);
+            // logger.debug('\n', message, Buffer.from(message, 'base64'));
             client.emit('message-received', {
                 username,
                 // message: encrypt(client.user.encryptKey, msg).toString('base64'),

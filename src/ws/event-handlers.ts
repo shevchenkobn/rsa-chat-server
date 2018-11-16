@@ -38,13 +38,14 @@ export const subscribers = new Map<string, EventHandler>([
     //   srcBuffer.length - srcBuffer.length % 512,
     // );
     const msgBuffer = decryptEncoded(srcBuffer, client.user.decryptKey);
-    logger.debug(JSON.stringify(msgBuffer.toString('utf8')));
     hub.broadcast('message-received', [], msgBuffer, client.user.name);
   }],
 ]);
 
 export const emitters = new Map<string, EventHandler>([
   ['message-received', (client, hub, msg: Buffer, username: string) => {
+    // const message = encryptEncoded(msg, client.user.encryptKey).toString(keyConfig.keyFormat.format);
+    // logger.debug('\n', message, Buffer.from(message, 'base64'));
     client.emit('message-received', {
       username,
       // message: encrypt(client.user.encryptKey, msg).toString('base64'),

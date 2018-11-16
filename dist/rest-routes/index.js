@@ -78,7 +78,7 @@ exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res,
     // req.user.localPublicKey = rsaPair.publicKey;
     // req.user.remotePrivateKey = req.body['private-key'];
     // logger.log(`Client's private key:\n${req.user.remotePrivateKey}`);
-    req.user.updateKeys(serverKey, clientKey);
+    req.user.updateKeys(clientKey, serverKey);
     res.json({
         key: serverKey.toString('base64'),
     });

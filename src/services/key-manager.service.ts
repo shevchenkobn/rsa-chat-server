@@ -95,7 +95,7 @@ export type NumericArray = number[]
   | Uint8Array;
 
 export function isNumericArray(arr: unknown): arr is NumericArray {
-  return arr && (arr as any).some && (arr as any).some(Number.isNaN);
+  return arr && (arr as any).some && !(arr as any).some(Number.isNaN);
 }
 
 export async function getKey(size = keyConfig.size): Promise<Buffer> {
@@ -174,7 +174,7 @@ const msgRegex = /^[a-z ]*$/;
 
 export function prepareEncode(message: string, inputEncoding = 'utf8') {
   if (!msgRegex.test(message)) {
-    throw new TypeError('Invalid message'); // MSG_BAD
+    throw new LogicError(ErrorCode.MSG_BAD, "Invalid message"); // MSG_BAD
   }
 
   const msgBuffer = Buffer.from(message, inputEncoding);
@@ -239,7 +239,7 @@ export function encryptEncoded(
   }
 
   if (strictKey && encrypted.length <= key.length) {
-    throw new TypeError('strictKey: message length exceeds key\'s');
+    throw new LogicError(ErrorCode.MSG_BAD, 'strictKey: message length exceeds key\'s');
   }
   for (let i = 0; i < encrypted.length; i++) {
     encrypted[i] = (encrypted[i] + key[i % key.length]) % 10;
@@ -252,7 +252,7 @@ export function decryptEncoded(msg: NumericArray, key: NumericArray, strictKey =
     throw new TypeError('key is not numeric array');
   }
   if (strictKey && msg.length <= key.length) {
-    throw new TypeError('strictKey: message length exceeds key\'s');
+    throw new LogicError(ErrorCode.MSG_BAD, 'strictKey: message length exceeds key\'s');
   }
 
   const decrypted = Buffer.from(msg as Buffer);

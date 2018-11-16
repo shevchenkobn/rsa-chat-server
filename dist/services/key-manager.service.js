@@ -9,7 +9,7 @@ const user_storage_service_1 = require("./user-storage.service");
 const errors_service_1 = require("./errors.service");
 const logger_service_1 = require("./logger.service");
 function isNumericArray(arr) {
-    return arr && arr.some && arr.some(Number.isNaN);
+    return arr && arr.some && !arr.some(Number.isNaN);
 }
 exports.isNumericArray = isNumericArray;
 async function getKey(size = config_1.keyConfig.size) {
@@ -78,7 +78,7 @@ const charTable = new class {
 const msgRegex = /^[a-z ]*$/;
 function prepareEncode(message, inputEncoding = 'utf8') {
     if (!msgRegex.test(message)) {
-        throw new TypeError('Invalid message'); // MSG_BAD
+        throw new errors_service_1.LogicError(errors_service_1.ErrorCode.MSG_BAD, "Invalid message"); // MSG_BAD
     }
     const msgBuffer = Buffer.from(message, inputEncoding);
     const encoded = [];
@@ -132,7 +132,7 @@ function encryptEncoded(msgBuffer, key, strictKey = false, fitToKey = true) {
         encrypted[i] = msgBuffer[i];
     }
     if (strictKey && encrypted.length <= key.length) {
-        throw new TypeError('strictKey: message length exceeds key\'s');
+        throw new errors_service_1.LogicError(errors_service_1.ErrorCode.MSG_BAD, 'strictKey: message length exceeds key\'s');
     }
     for (let i = 0; i < encrypted.length; i++) {
         encrypted[i] = (encrypted[i] + key[i % key.length]) % 10;
@@ -145,7 +145,7 @@ function decryptEncoded(msg, key, strictKey = false) {
         throw new TypeError('key is not numeric array');
     }
     if (strictKey && msg.length <= key.length) {
-        throw new TypeError('strictKey: message length exceeds key\'s');
+        throw new errors_service_1.LogicError(errors_service_1.ErrorCode.MSG_BAD, 'strictKey: message length exceeds key\'s');
     }
     const decrypted = Buffer.from(msg);
     for (let i = 0; i < decrypted.length; i++) {
