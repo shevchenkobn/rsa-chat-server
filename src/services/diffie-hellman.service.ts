@@ -1,4 +1,5 @@
 import { randomBytes } from 'crypto';
+import { keyConfig } from '../config/config';
 
 const bytes = 332 / 8;
 const primeBitLength = keyConfig.size * 8;
@@ -333,7 +334,6 @@ function inverseMod(a: number, n: number) {
 // helpers for getPrimitiveRoot end
 
 import { createDiffieHellman } from 'crypto';
-import { keyConfig } from '../config/config';
 
 const probableG: ReadonlyArray<number> = [2, 3, 5, 7, 11, 13, 17, 19];
 

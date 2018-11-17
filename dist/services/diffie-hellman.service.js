@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const crypto_1 = require("crypto");
+const config_1 = require("../config/config");
 const bytes = 332 / 8;
 const primeBitLength = config_1.keyConfig.size * 8;
 class DiffieHellman {
@@ -274,7 +275,6 @@ function inverseMod(a, n) {
 }
 // helpers for getPrimitiveRoot end
 const crypto_2 = require("crypto");
-const config_1 = require("../config/config");
 const probableG = [2, 3, 5, 7, 11, 13, 17, 19];
 function pg() {
     const g = probableG[Math.floor(Math.random() * probableG.length)];
