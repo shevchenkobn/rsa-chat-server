@@ -116,9 +116,6 @@ function getPrime() {
   return prime;
 }
 
-const prime = getPrime();
-console.log(prime, getPrimitiveRoot(prime));
-
 // helpers for getPrime
 
 function getRandom() {

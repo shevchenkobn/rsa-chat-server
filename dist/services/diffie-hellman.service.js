@@ -99,8 +99,6 @@ function getPrime() {
     } while (!isPrime(prime));
     return prime;
 }
-const prime = getPrime();
-console.log(prime, getPrimitiveRoot(prime));
 // helpers for getPrime
 function getRandom() {
     return Math.random() * Number.MAX_SAFE_INTEGER;
