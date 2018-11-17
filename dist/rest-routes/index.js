@@ -7,6 +7,7 @@ const user_storage_service_1 = require("../services/user-storage.service");
 const config_1 = require("../config/config");
 const logger_service_1 = require("../services/logger.service");
 const key_manager_service_1 = require("../services/key-manager.service");
+const diffie_hellman_service_1 = require("../services/diffie-hellman.service");
 exports.router = express_1.Router();
 /**
  * Ping
@@ -41,6 +42,15 @@ exports.router.delete('/auth', ...auth_service_1.authMiddlewares, ((req, res, ne
 exports.router.get('/key/info', (req, res) => {
     res.json(config_1.keyConfig);
 });
+exports.router.get('/key', ...auth_service_1.authMiddlewares, (async (req, res, next) => {
+    logger_service_1.logger.log('Key p and g requested');
+    const pg = diffie_hellman_service_1.pg();
+    req.user.updateDiffieHellman(new diffie_hellman_service_1.DiffieHellman(pg.p, pg.g));
+    res.json({
+        p: Buffer.from(pg.p.toString(16), 'hex').toString('base64'),
+        g: Number(pg.g),
+    });
+}));
 exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res, next) => {
     logger_service_1.logger.log('Key generating');
     if (!(req.body instanceof Object)) {
@@ -48,45 +58,35 @@ exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res,
         next(new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_BAD));
         return;
     }
-    if (typeof req.body.key !== 'string') {
+    if (typeof req.body.bigB !== 'string') {
         next(new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_BAD));
         logger_service_1.logger.error(`bad key: ${req.body['key']}`);
         return;
     }
-    let clientKey;
+    let bigA;
     try {
-        clientKey = key_manager_service_1.normalizeKey(Buffer.from(req.body.key, config_1.keyConfig.keyFormat.format));
+        const bigB = BigInt(`0x${Buffer.from(req.body.bigB, 'base64').toString('hex')}`);
+        const dh = req.user.diffieHellman;
+        await dh.generateSmallA();
+        dh.generateK(bigB);
+        bigA = dh.getBigA();
+        logger_service_1.logger.log(`A: ${bigA}`);
     }
     catch (err) {
         next(new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_BAD));
-        logger_service_1.logger.error(`bad key: ${req.body['key']}`);
-        return;
-    }
-    if (req.body.key.length === config_1.keyConfig.size) {
-        next(new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_SIZE));
-        logger_service_1.logger.error(`bad key size: ${clientKey}`);
+        logger_service_1.logger.error(`bad key: ${req.body['bigB']}`);
         return;
     }
     if (key_manager_service_1.keyExpiration.has(req.user.name)) {
         key_manager_service_1.keyExpiration.delete(req.user.name);
         logger_service_1.logger.log('Had keys, deleting');
     }
-    const serverKey = await key_manager_service_1.getKey();
-    // logger.log(`My public key:\n${rsaPair.publicKey}`);
-    // logger.log(`My private key:\n${rsaPair.privateKey}`);
-    // logger.log(`Client's public key:\n${clientKey}`);
-    // req.user.localPublicKey = rsaPair.publicKey;
-    // req.user.remotePrivateKey = req.body['private-key'];
-    // logger.log(`Client's private key:\n${req.user.remotePrivateKey}`);
-    req.user.updateKeys(clientKey, serverKey);
+    logger_service_1.logger.log(`K: ${req.user.diffieHellman.k}`);
+    const key = key_manager_service_1.normalizeKey(Buffer.from(`0x${req.user.diffieHellman.k.toString(16)}`, 'hex'));
+    req.user.updateKeys(key, key);
+    key_manager_service_1.keyExpiration.schedule(req.user.name);
     res.json({
-        key: serverKey.toString('base64'),
+        bigA: bigA.toString('base64'),
     });
 }));
-/**
- * Chat
- */
-// router.post('/chat', ...authMiddlewares, ((req, res, next) => {
-//   // TODO: connect to chat
-// }) as Handler);
 //# sourceMappingURL=index.js.map

@@ -1,8 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-// import * as crypto from 'crypto';
-// import { privateDecrypt, publicEncrypt } from 'crypto';
-// import * as RsaKey from 'node-rsa';
 const crypto_1 = require("crypto");
 const config_1 = require("../config/config");
 const user_storage_service_1 = require("./user-storage.service");
@@ -78,7 +75,7 @@ const charTable = new class {
 const msgRegex = /^[a-z ]*$/;
 function prepareEncode(message, inputEncoding = 'utf8') {
     if (!msgRegex.test(message)) {
-        throw new errors_service_1.LogicError(errors_service_1.ErrorCode.MSG_BAD, "Invalid message"); // MSG_BAD
+        throw new errors_service_1.LogicError(errors_service_1.ErrorCode.MSG_BAD, 'Invalid message'); // MSG_BAD
     }
     const msgBuffer = Buffer.from(message, inputEncoding);
     const encoded = [];
@@ -227,115 +224,4 @@ user_storage_service_1.storage.on('deleted', (user) => {
     exports.keyExpiration.delete(user.name);
     logger_service_1.logger.log(`keyExpiration for ${user.name} is deleted`);
 });
-// export class PublicKey {
-//   static allowedKeySources: ReadonlyArray<string> = [
-//     'string',
-//     'object',
-//   ];
-//   static allowedKeyFormats: ReadonlyArray<string> = [
-//     'pkcs1-public-der',
-//     'pkcs1-public-pem',
-//     'base64',
-//   ];
-//
-//   readonly components: Readonly<{
-//     e: number;
-//     n: Buffer;
-//   }>;
-//   private _rsaKey: RsaKey;
-//
-//   constructor(source: any, format?: string) {
-//     const sourceType = typeof source;
-//     this._rsaKey = new RsaKey();
-//     switch (sourceType) {
-//       case 'string':
-//         if (format === 'pkcs1-public-pem') {
-//           this._rsaKey.importKey(source, format);
-//         } else {
-//           throw new LogicError(ErrorCode.SERVER, `Only pkcs1-public-pem is allowed, not ${format}`);
-//         }
-//         break;
-//
-//       case 'object':
-//         if (format === 'pkcs1-public-der' && source instanceof Buffer) {
-//           this._rsaKey.importKey(source, format);
-//           break;
-//         }
-//         if (
-//           typeof source.n === 'string'
-//           && format === 'base64'
-//         ) {
-//           source.n = Buffer.from(source.n, 'base64');
-//         }
-//         this.importFromObject(source);
-//         break;
-//
-//       default:
-//         throw new LogicError(
-//           ErrorCode.SERVER,
-//           `Source ${format} must of type in `
-//           + `${JSON.stringify(PublicKey.allowedKeySources)}, not ${sourceType}`,
-//         );
-//     }
-//     if (this._rsaKey.getKeySize() !== keyConfig.size) {
-//       logger.debug(this._rsaKey.getKeySize());
-//       throw new LogicError(ErrorCode.KEY_SIZE);
-//     }
-//
-//     const components = this._rsaKey.exportKey('components-public-der');
-//     this.components = {
-//       n: components.n[0] === 0
-//         ? components.n.slice(1)
-//         : components.n,
-//       e: components.e instanceof Buffer
-//         // FIXME: May be not Little Endian
-//         ? components.e.readUIntLE(0, components.e.length)
-//         : components.e,
-//     };
-//   }
-//
-//   private importFromObject(obj: any) {
-//     if (!(
-//       typeof obj === 'object'
-//       && typeof obj.e === 'number'
-//       && (
-//         Array.isArray(obj.n)
-//         || obj.n instanceof Buffer
-//       )
-//     )) {
-//       throw new LogicError(ErrorCode.KEY_BAD);
-//     }
-//     if (keyConfig.size % 8 === 0) {
-//       obj.n = Buffer.concat([Buffer.alloc(1), Buffer.from(obj.n)]);
-//     }
-//
-//     this._rsaKey.importKey(obj, 'components-public-der');
-//   }
-//
-//   toString() {
-//     return this._rsaKey.exportKey('pkcs1-public-pem');
-//   }
-//
-//   toBuffer() {
-//     return this._rsaKey.exportKey('pkcs1-public-der');
-//   }
-//
-//   toJSON() {
-//     return {
-//       e: this.components.e,
-//       n: [...this.components.n.values()],
-//     };
-//   }
-// }
-// export function saveKeysForUser(
-//   userNameOrUser: string | User,
-//   serverKeys: RsaKeyPair,
-//   foreignPublicKey: PublicKey,
-// ) {
-//   const user = typeof userNameOrUser === 'string'
-//     ? storage.get(userNameOrUser)
-//     : userNameOrUser;
-//   user.updateKeys(foreignPublicKey.toString(), serverKeys.privateKey);
-//   return user;
-// }
 //# sourceMappingURL=key-manager.service.js.map

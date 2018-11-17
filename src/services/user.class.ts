@@ -1,12 +1,12 @@
 import { ErrorCode, LogicError } from './errors.service';
 import { NumericArray } from './key-manager.service';
+import { DiffieHellman } from './diffie-hellman.service';
 
 export class User {
   readonly name: string;
   protected _encryptKey: NumericArray | null;
   protected _decryptKey: NumericArray | null;
-  // public localPublicKey: string = '';
-  // public remotePrivateKey: string = '';
+  protected _diffieHellman: DiffieHellman | null = null;
   protected _updatedAt: number;
   protected _lastLoggedIn: number;
 
@@ -32,6 +32,10 @@ export class User {
     return new Date(this._lastLoggedIn);
   }
 
+  get diffieHellman() {
+    return this._diffieHellman;
+  }
+
   constructor(name: string, encryptKey = null, decryptKey = null) {
     if (!name.trim()) {
       throw new LogicError(ErrorCode.AUTH_EMPTY_NAME);
@@ -45,6 +49,17 @@ export class User {
 
   hasKeys() {
     return !!this._encryptKey && !!this._decryptKey;
+  }
+
+  updateDiffieHellman(dh: DiffieHellman) {
+    if(!dh) {
+      throw new TypeError(`diffieHellman is invalid: ${dh}`);
+    }
+    this._diffieHellman = dh;
+  }
+
+  deleteDiffieHellman() {
+    this._diffieHellman = null;
   }
 
   updateKeys(encryptKey: NumericArray, decryptKey: NumericArray) {

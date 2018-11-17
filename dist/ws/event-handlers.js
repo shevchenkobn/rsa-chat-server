@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const key_manager_service_1 = require("../services/key-manager.service");
 const errors_service_1 = require("../services/errors.service");
 const logger_service_1 = require("../services/logger.service");
-const config_1 = require("../config/config");
 exports.subscribers = new Map([
     ['message-sent', (client, hub, payload) => {
             if (!(payload instanceof Object
@@ -13,32 +12,16 @@ exports.subscribers = new Map([
                 client.emit('error', new errors_service_1.LogicError(errors_service_1.ErrorCode.MSG_BAD));
                 return;
             }
-            // const sampleMsg = Buffer.from('Hello, fuckers))))').toString('base64');
-            // const encrypted = encrypt(client.user.encryptKey, Buffer.from(sampleMsg, 'base64'));
-            // logger.debug(encrypted.toString('base64'));
-            // logger.debug(
-            //   decrypt(
-            //     client.user.remotePrivateKey,
-            //     encrypted,
-            //   ).toString('utf8'),
-            // );
-            const srcBuffer = Buffer.from(payload.message, config_1.keyConfig.keyFormat.format);
-            // srcBuffer = srcBuffer.slice(
-            //   0,
-            //   srcBuffer.length - srcBuffer.length % 512,
-            // );
+            const srcBuffer = Buffer.from(payload.message, 'base64');
             const msgBuffer = key_manager_service_1.decryptEncoded(srcBuffer, client.user.decryptKey);
             hub.broadcast('message-received', [], msgBuffer, client.user.name);
         }],
 ]);
 exports.emitters = new Map([
     ['message-received', (client, hub, msg, username) => {
-            // const message = encryptEncoded(msg, client.user.encryptKey).toString(keyConfig.keyFormat.format);
-            // logger.debug('\n', message, Buffer.from(message, 'base64'));
             client.emit('message-received', {
                 username,
-                // message: encrypt(client.user.encryptKey, msg).toString('base64'),
-                message: key_manager_service_1.encryptEncoded(msg, client.user.encryptKey).toString(config_1.keyConfig.keyFormat.format),
+                message: key_manager_service_1.encryptEncoded(msg, client.user.encryptKey).toString('base64'),
             });
         }],
     ['client-created', (client, hub) => {

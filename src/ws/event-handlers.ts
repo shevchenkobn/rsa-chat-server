@@ -7,7 +7,6 @@ import {
 } from '../services/key-manager.service';
 import { ErrorCode, LogicError } from '../services/errors.service';
 import { logger } from '../services/logger.service';
-import { keyConfig } from '../config/config';
 
 export const subscribers = new Map<string, EventHandler>([
   ['message-sent', (client, hub, payload?: any | null) => {
@@ -23,20 +22,7 @@ export const subscribers = new Map<string, EventHandler>([
       return;
     }
 
-    // const sampleMsg = Buffer.from('Hello, fuckers))))').toString('base64');
-    // const encrypted = encrypt(client.user.encryptKey, Buffer.from(sampleMsg, 'base64'));
-    // logger.debug(encrypted.toString('base64'));
-    // logger.debug(
-    //   decrypt(
-    //     client.user.remotePrivateKey,
-    //     encrypted,
-    //   ).toString('utf8'),
-    // );
-    const srcBuffer = Buffer.from(payload.message, keyConfig.keyFormat.format);
-    // srcBuffer = srcBuffer.slice(
-    //   0,
-    //   srcBuffer.length - srcBuffer.length % 512,
-    // );
+    const srcBuffer = Buffer.from(payload.message, 'base64');
     const msgBuffer = decryptEncoded(srcBuffer, client.user.decryptKey);
     hub.broadcast('message-received', [], msgBuffer, client.user.name);
   }],
@@ -44,12 +30,9 @@ export const subscribers = new Map<string, EventHandler>([
 
 export const emitters = new Map<string, EventHandler>([
   ['message-received', (client, hub, msg: Buffer, username: string) => {
-    // const message = encryptEncoded(msg, client.user.encryptKey).toString(keyConfig.keyFormat.format);
-    // logger.debug('\n', message, Buffer.from(message, 'base64'));
     client.emit('message-received', {
       username,
-      // message: encrypt(client.user.encryptKey, msg).toString('base64'),
-      message: encryptEncoded(msg, client.user.encryptKey).toString(keyConfig.keyFormat.format),
+      message: encryptEncoded(msg, client.user.encryptKey).toString('base64'),
     });
   }],
 

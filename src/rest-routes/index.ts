@@ -11,6 +11,7 @@ import {
   decrypt,
   isNumericArray, keyExpiration, normalizeKey,
 } from '../services/key-manager.service';
+import { DiffieHellman, pg as getPG } from '../services/diffie-hellman.service';
 
 export const router = Router();
 
@@ -55,6 +56,17 @@ router.get('/key/info', (req, res) => {
   res.json(keyConfig);
 });
 
+router.get('/key', ...authMiddlewares, (async (req, res, next) => {
+  logger.log('Key p and g requested');
+  const pg = getPG();
+  req.user.updateDiffieHellman(new DiffieHellman(pg.p, pg.g));
+
+  res.json({
+    p: Buffer.from(pg.p.toString(16), 'hex').toString('base64'),
+    g: Number(pg.g),
+  });
+}) as Handler);
+
 router.post('/key', ...authMiddlewares, (async (req, res, next) => {
   logger.log('Key generating');
   if (!(req.body instanceof Object)) {
@@ -63,23 +75,24 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
     return;
   }
 
-  if (typeof req.body.key !== 'string') {
+  if (typeof req.body.bigB !== 'string') {
     next(new LogicError(ErrorCode.KEY_BAD));
     logger.error(`bad key: ${req.body['key']}`);
     return;
   }
 
-  let clientKey: Buffer;
+  let bigA: Buffer;
   try {
-    clientKey = normalizeKey(Buffer.from(req.body.key, keyConfig.keyFormat.format)) as Buffer;
+    const bigB = BigInt(`0x${Buffer.from(req.body.bigB, 'base64').toString('hex')}`);
+
+    const dh = req.user.diffieHellman;
+    await dh.generateSmallA();
+    dh.generateK(bigB);
+    bigA = dh.getBigA();
+    logger.log(`A: ${bigA}`);
   } catch (err) {
     next(new LogicError(ErrorCode.KEY_BAD));
-    logger.error(`bad key: ${req.body['key']}`);
-    return;
-  }
-  if (req.body.key.length === keyConfig.size) {
-    next(new LogicError(ErrorCode.KEY_SIZE));
-    logger.error(`bad key size: ${clientKey}`);
+    logger.error(`bad key: ${req.body['bigB']}`);
     return;
   }
 
@@ -88,24 +101,13 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
     logger.log('Had keys, deleting');
   }
 
-  const serverKey = await getKey();
+  logger.log(`K: ${req.user.diffieHellman.k}`);
+  const key = normalizeKey(Buffer.from(`0x${req.user.diffieHellman.k.toString(16)}`, 'hex'));
 
-  // logger.log(`My public key:\n${rsaPair.publicKey}`);
-  // logger.log(`My private key:\n${rsaPair.privateKey}`);
-  // logger.log(`Client's public key:\n${clientKey}`);
+  req.user.updateKeys(key, key);
+  keyExpiration.schedule(req.user.name);
 
-  // req.user.localPublicKey = rsaPair.publicKey;
-  // req.user.remotePrivateKey = req.body['private-key'];
-  // logger.log(`Client's private key:\n${req.user.remotePrivateKey}`);
-  req.user.updateKeys(clientKey, serverKey);
   res.json({
-    key: serverKey.toString('base64'),
+    bigA: bigA.toString('base64'),
   });
 }) as Handler);
-
-/**
- * Chat
- */
-// router.post('/chat', ...authMiddlewares, ((req, res, next) => {
-//   // TODO: connect to chat
-// }) as Handler);
