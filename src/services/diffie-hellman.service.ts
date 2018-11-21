@@ -46,7 +46,6 @@ export class DiffieHellman {
           reject(err);
           return;
         }
-        logger.debug('smallA successfully generated');
         this._a = BigInt(`0x${buf.toString('hex')}`);
         resolve(this._a);
       });

@@ -38,7 +38,6 @@ class DiffieHellman {
                     reject(err);
                     return;
                 }
-                logger_service_1.logger.debug('smallA successfully generated');
                 this._a = BigInt(`0x${buf.toString('hex')}`);
                 resolve(this._a);
             });
@@ -252,7 +251,6 @@ function inverseMod(a, n) {
 }
 // helpers for getPrimitiveRoot end
 const crypto_2 = require("crypto");
-const logger_service_1 = require("./logger.service");
 const helper_service_1 = require("./helper.service");
 const probableG = [2, 3, 5, 7, 11, 13, 17, 19];
 function pg() {
