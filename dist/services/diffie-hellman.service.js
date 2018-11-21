@@ -49,7 +49,7 @@ class DiffieHellman {
             throw new TypeError('a is not defined');
         }
         if (!this._bigA) {
-            this._bigA = modPow(this._g, this._a, this._p);
+            this._bigA = helper_service_1.modPow(this._g, this._a, this._p);
         }
         return this._bigA;
     }
@@ -58,33 +58,11 @@ class DiffieHellman {
             throw new TypeError('K is ready');
         }
         this._bigB = bigB;
-        this._k = modPow(bigB, this._a, this._p);
+        this._k = helper_service_1.modPow(bigB, this._a, this._p);
         return this._k;
     }
 }
 exports.DiffieHellman = DiffieHellman;
-function modPow(base, exponent, modulus) {
-    if (exponent < 0n) {
-        throw new TypeError(`Negative exponent: ${exponent}`);
-    }
-    if (base === 0n || modulus === 0n || modulus === 1n) {
-        return 0n;
-    }
-    if (exponent === 0n) {
-        return 1n;
-    }
-    let e = exponent;
-    let b = base;
-    let result = 1n;
-    while (e > 0n) {
-        if ((e & 1n) === 1n) {
-            result = (result * b) % modulus;
-        }
-        e >>= 1n;
-        b = (b * b) % modulus;
-    }
-    return result;
-}
 function getPG() {
     const p = getPrime();
     return {
@@ -275,6 +253,7 @@ function inverseMod(a, n) {
 // helpers for getPrimitiveRoot end
 const crypto_2 = require("crypto");
 const logger_service_1 = require("./logger.service");
+const helper_service_1 = require("./helper.service");
 const probableG = [2, 3, 5, 7, 11, 13, 17, 19];
 function pg() {
     const g = probableG[Math.floor(Math.random() * probableG.length)];

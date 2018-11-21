@@ -73,29 +73,6 @@ export class DiffieHellman {
   }
 }
 
-function modPow(base: bigint, exponent: bigint, modulus: bigint) {
-  if (exponent < 0n) {
-    throw new TypeError(`Negative exponent: ${exponent}`);
-  }
-  if (base === 0n || modulus === 0n || modulus === 1n) {
-    return 0n;
-  }
-  if (exponent === 0n) {
-    return 1n;
-  }
-  let e = exponent;
-  let b = base;
-  let result = 1n;
-  while (e > 0n) {
-    if ((e & 1n) === 1n) {
-      result = (result * b) % modulus;
-    }
-    e >>= 1n;
-    b = (b * b) % modulus;
-  }
-  return result;
-}
-
 interface PG {
   p: bigint;
   g: bigint;
@@ -333,6 +310,7 @@ function inverseMod(a: number, n: number) {
 
 import { createDiffieHellman } from 'crypto';
 import { logger } from './logger.service';
+import { modPow } from './helper.service';
 
 const probableG: ReadonlyArray<number> = [2, 3, 5, 7, 11, 13, 17, 19];
 

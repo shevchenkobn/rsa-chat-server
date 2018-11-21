@@ -8,6 +8,7 @@ const config_1 = require("../config/config");
 const logger_service_1 = require("../services/logger.service");
 const key_manager_service_1 = require("../services/key-manager.service");
 const diffie_hellman_service_1 = require("../services/diffie-hellman.service");
+const helper_service_1 = require("../services/helper.service");
 exports.router = express_1.Router();
 /**
  * Ping
@@ -47,7 +48,7 @@ exports.router.get('/key', ...auth_service_1.authMiddlewares, (async (req, res, 
     const pg = diffie_hellman_service_1.pg();
     req.user.updateDiffieHellman(new diffie_hellman_service_1.DiffieHellman(pg.p, pg.g));
     res.json({
-        p: Buffer.from(pg.p.toString(16), 'hex').toString('base64'),
+        p: helper_service_1.bufferEnsureLE(Buffer.from(pg.p.toString(16), 'hex')).toString('base64'),
         g: Number(pg.g),
     });
 }));
@@ -68,7 +69,7 @@ exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res,
     let bigA;
     const dh = req.user.diffieHellman;
     try {
-        const bigB = BigInt(`0x${Buffer.from(req.body.bigB, 'base64').toString('hex')}`);
+        const bigB = BigInt(`0x${helper_service_1.bufferEnsureLE(Buffer.from(req.body.bigB, 'base64')).toString('hex')}`);
         logger_service_1.logger.debug('bigB was converted');
         await dh.generateSmallA();
         logger_service_1.logger.debug('smallA was generated');
@@ -92,7 +93,7 @@ exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res,
     req.user.updateKeys(key, key);
     key_manager_service_1.keyExpiration.schedule(req.user.name);
     res.json({
-        bigA: bigA.toString('base64'),
+        bigA: helper_service_1.bufferEnsureLE(bigA).toString('base64'),
     });
 }));
 //# sourceMappingURL=index.js.map

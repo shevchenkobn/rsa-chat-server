@@ -12,6 +12,7 @@ import {
   isNumericArray, keyExpiration, normalizeKey,
 } from '../services/key-manager.service';
 import { DiffieHellman, pg as getPG } from '../services/diffie-hellman.service';
+import { bufferEnsureLE } from '../services/helper.service';
 
 export const router = Router();
 
@@ -62,7 +63,7 @@ router.get('/key', ...authMiddlewares, (async (req, res, next) => {
   req.user.updateDiffieHellman(new DiffieHellman(pg.p, pg.g));
 
   res.json({
-    p: Buffer.from(pg.p.toString(16), 'hex').toString('base64'),
+    p: bufferEnsureLE(Buffer.from(pg.p.toString(16), 'hex')).toString('base64'),
     g: Number(pg.g),
   });
 }) as Handler);
@@ -86,7 +87,9 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
   let bigA: Buffer;
   const dh = req.user.diffieHellman;
   try {
-    const bigB = BigInt(`0x${Buffer.from(req.body.bigB, 'base64').toString('hex')}`);
+    const bigB = BigInt(`0x${
+      bufferEnsureLE(Buffer.from(req.body.bigB, 'base64')).toString('hex')
+    }`);
     logger.debug('bigB was converted');
 
     await dh.generateSmallA();
@@ -114,6 +117,6 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
   keyExpiration.schedule(req.user.name);
 
   res.json({
-    bigA: bigA.toString('base64'),
+    bigA: bufferEnsureLE(bigA).toString('base64'),
   });
 }) as Handler);
