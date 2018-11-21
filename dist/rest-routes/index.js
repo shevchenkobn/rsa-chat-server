@@ -66,10 +66,10 @@ exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res,
     }
     logger_service_1.logger.debug('Body has bigB');
     let bigA;
+    const dh = req.user.diffieHellman;
     try {
         const bigB = BigInt(`0x${Buffer.from(req.body.bigB, 'base64').toString('hex')}`);
         logger_service_1.logger.debug('bigB was converted');
-        const dh = req.user.diffieHellman;
         await dh.generateSmallA();
         logger_service_1.logger.debug('smallA was generated');
         dh.generateK(bigB);
@@ -86,8 +86,8 @@ exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res,
         key_manager_service_1.keyExpiration.delete(req.user.name);
         logger_service_1.logger.log('Had keys, deleting');
     }
-    logger_service_1.logger.log(`K: ${req.user.diffieHellman.k}`);
-    const key = key_manager_service_1.normalizeKey(Buffer.from(`0x${req.user.diffieHellman.k.toString(16)}`, 'hex'));
+    logger_service_1.logger.log(`K: ${dh.k}`);
+    const key = key_manager_service_1.normalizeKey(Buffer.from(dh.k.toString(16), 'hex'));
     logger_service_1.logger.debug('K is normalized: ' + key.join(', '));
     req.user.updateKeys(key, key);
     key_manager_service_1.keyExpiration.schedule(req.user.name);

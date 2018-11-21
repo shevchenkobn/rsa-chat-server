@@ -84,11 +84,11 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
   logger.debug('Body has bigB');
 
   let bigA: Buffer;
+  const dh = req.user.diffieHellman;
   try {
     const bigB = BigInt(`0x${Buffer.from(req.body.bigB, 'base64').toString('hex')}`);
     logger.debug('bigB was converted');
 
-    const dh = req.user.diffieHellman;
     await dh.generateSmallA();
     logger.debug('smallA was generated');
     dh.generateK(bigB);
@@ -106,8 +106,8 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
     logger.log('Had keys, deleting');
   }
 
-  logger.log(`K: ${req.user.diffieHellman.k}`);
-  const key = normalizeKey(Buffer.from(`0x${req.user.diffieHellman.k.toString(16)}`, 'hex'));
+  logger.log(`K: ${dh.k}`);
+  const key = normalizeKey(Buffer.from(dh.k.toString(16), 'hex'));
 
   logger.debug('K is normalized: ' + key.join(', '));
   req.user.updateKeys(key, key);
