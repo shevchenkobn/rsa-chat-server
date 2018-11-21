@@ -74,20 +74,25 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
     next(new LogicError(ErrorCode.KEY_BAD));
     return;
   }
+  logger.debug('Body is object');
 
   if (typeof req.body.bigB !== 'string') {
     next(new LogicError(ErrorCode.KEY_BAD));
     logger.error(`bad key: ${req.body['key']}`);
     return;
   }
+  logger.debug('Body has bigB');
 
   let bigA: Buffer;
   try {
     const bigB = BigInt(`0x${Buffer.from(req.body.bigB, 'base64').toString('hex')}`);
+    logger.debug('bigB was converted');
 
     const dh = req.user.diffieHellman;
     await dh.generateSmallA();
+    logger.debug('smallA was generated');
     dh.generateK(bigB);
+    logger.debug('K is calculated');
     bigA = Buffer.from(dh.getBigA().toString(16), 'hex');
     logger.log(`A: ${dh.getBigA()}`);
   } catch (err) {
@@ -104,6 +109,7 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
   logger.log(`K: ${req.user.diffieHellman.k}`);
   const key = normalizeKey(Buffer.from(`0x${req.user.diffieHellman.k.toString(16)}`, 'hex'));
 
+  logger.debug('K is normalized');
   req.user.updateKeys(key, key);
   keyExpiration.schedule(req.user.name);
 

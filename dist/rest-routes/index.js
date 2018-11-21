@@ -58,17 +58,22 @@ exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res,
         next(new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_BAD));
         return;
     }
+    logger_service_1.logger.debug('Body is object');
     if (typeof req.body.bigB !== 'string') {
         next(new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_BAD));
         logger_service_1.logger.error(`bad key: ${req.body['key']}`);
         return;
     }
+    logger_service_1.logger.debug('Body has bigB');
     let bigA;
     try {
         const bigB = BigInt(`0x${Buffer.from(req.body.bigB, 'base64').toString('hex')}`);
+        logger_service_1.logger.debug('bigB was converted');
         const dh = req.user.diffieHellman;
         await dh.generateSmallA();
+        logger_service_1.logger.debug('smallA was generated');
         dh.generateK(bigB);
+        logger_service_1.logger.debug('K is calculated');
         bigA = Buffer.from(dh.getBigA().toString(16), 'hex');
         logger_service_1.logger.log(`A: ${dh.getBigA()}`);
     }
@@ -83,6 +88,7 @@ exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res,
     }
     logger_service_1.logger.log(`K: ${req.user.diffieHellman.k}`);
     const key = key_manager_service_1.normalizeKey(Buffer.from(`0x${req.user.diffieHellman.k.toString(16)}`, 'hex'));
+    logger_service_1.logger.debug('K is normalized');
     req.user.updateKeys(key, key);
     key_manager_service_1.keyExpiration.schedule(req.user.name);
     res.json({

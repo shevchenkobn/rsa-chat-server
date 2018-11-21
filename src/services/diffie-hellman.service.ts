@@ -46,6 +46,7 @@ export class DiffieHellman {
           reject(err);
           return;
         }
+        logger.debug('smallA successfully generated');
         this._a = BigInt(`0x${buf.toString('hex')}`);
         resolve(this._a);
       });
@@ -331,6 +332,7 @@ function inverseMod(a: number, n: number) {
 // helpers for getPrimitiveRoot end
 
 import { createDiffieHellman } from 'crypto';
+import { logger } from './logger.service';
 
 const probableG: ReadonlyArray<number> = [2, 3, 5, 7, 11, 13, 17, 19];
 
