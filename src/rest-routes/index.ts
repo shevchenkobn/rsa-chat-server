@@ -109,7 +109,7 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
   logger.log(`K: ${req.user.diffieHellman.k}`);
   const key = normalizeKey(Buffer.from(`0x${req.user.diffieHellman.k.toString(16)}`, 'hex'));
 
-  logger.debug('K is normalized');
+  logger.debug('K is normalized: ' + key.join(', '));
   req.user.updateKeys(key, key);
   keyExpiration.schedule(req.user.name);
 

@@ -50,7 +50,7 @@ class User {
         if (!encryptKey || !encryptKey.length) {
             throw new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_BAD, 'Bad encrypt key');
         }
-        if (!decryptKey || !encryptKey.length) {
+        if (!decryptKey || !decryptKey.length) {
             throw new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_BAD, 'Bad decrypt key');
         }
         this._decryptKey = decryptKey;

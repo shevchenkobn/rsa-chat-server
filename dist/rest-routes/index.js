@@ -88,7 +88,7 @@ exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res,
     }
     logger_service_1.logger.log(`K: ${req.user.diffieHellman.k}`);
     const key = key_manager_service_1.normalizeKey(Buffer.from(`0x${req.user.diffieHellman.k.toString(16)}`, 'hex'));
-    logger_service_1.logger.debug('K is normalized');
+    logger_service_1.logger.debug('K is normalized: ' + key.join(', '));
     req.user.updateKeys(key, key);
     key_manager_service_1.keyExpiration.schedule(req.user.name);
     res.json({

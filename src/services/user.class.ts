@@ -66,7 +66,7 @@ export class User {
     if (!encryptKey || !encryptKey.length) {
       throw new LogicError(ErrorCode.KEY_BAD, 'Bad encrypt key');
     }
-    if (!decryptKey || !encryptKey.length) {
+    if (!decryptKey || !decryptKey.length) {
       throw new LogicError(ErrorCode.KEY_BAD, 'Bad decrypt key');
     }
 
