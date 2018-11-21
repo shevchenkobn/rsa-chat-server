@@ -67,11 +67,15 @@ exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res,
     let bigA;
     const dh = req.user.diffieHellman;
     try {
-        const bigB = BigInt(`0x${helper_service_1.bufferEnsureLE(Buffer.from(req.body.bigB, 'base64')).toString('hex')}`);
+        // const bigB = BigInt(`0x${
+        //   bufferEnsureLE(Buffer.from(req.body.bigB, 'base64')).toString('hex')
+        // }`);
+        const bigB = BigInt(req.body.bigB);
         logger_service_1.logger.log(`B: ${bigB}`);
         await dh.generateSmallA();
         dh.generateK(bigB);
-        bigA = Buffer.from(dh.getBigA().toString(16), 'hex');
+        // bigA = Buffer.from(dh.getBigA().toString(16), 'hex');
+        bigA = dh.getBigA();
         logger_service_1.logger.log(`A: ${dh.getBigA()}`);
     }
     catch (err) {
@@ -88,7 +92,8 @@ exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res,
     req.user.updateKeys(key, key);
     key_manager_service_1.keyExpiration.schedule(req.user.name);
     res.json({
-        bigA: helper_service_1.bufferEnsureLE(bigA).toString('base64'),
+        // bigA: bufferEnsureLE(bigA).toString('base64'),
+        bigA: bigA.toString(),
     });
 }));
 //# sourceMappingURL=index.js.map

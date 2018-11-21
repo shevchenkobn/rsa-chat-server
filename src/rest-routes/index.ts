@@ -82,17 +82,19 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
     return;
   }
 
-  let bigA: Buffer;
+  let bigA: bigint;
   const dh = req.user.diffieHellman;
   try {
-    const bigB = BigInt(`0x${
-      bufferEnsureLE(Buffer.from(req.body.bigB, 'base64')).toString('hex')
-    }`);
+    // const bigB = BigInt(`0x${
+    //   bufferEnsureLE(Buffer.from(req.body.bigB, 'base64')).toString('hex')
+    // }`);
+    const bigB = BigInt(req.body.bigB);
     logger.log(`B: ${bigB}`);
 
     await dh.generateSmallA();
     dh.generateK(bigB);
-    bigA = Buffer.from(dh.getBigA().toString(16), 'hex');
+    // bigA = Buffer.from(dh.getBigA().toString(16), 'hex');
+    bigA = dh.getBigA();
     logger.log(`A: ${dh.getBigA()}`);
   } catch (err) {
     next(new LogicError(ErrorCode.KEY_BAD));
@@ -112,6 +114,7 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
   keyExpiration.schedule(req.user.name);
 
   res.json({
-    bigA: bufferEnsureLE(bigA).toString('base64'),
+    // bigA: bufferEnsureLE(bigA).toString('base64'),
+    bigA: bigA.toString(),
   });
 }) as Handler);
