@@ -88,8 +88,8 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
     const dh = req.user.diffieHellman;
     await dh.generateSmallA();
     dh.generateK(bigB);
-    bigA = dh.getBigA();
-    logger.log(`A: ${bigA}`);
+    bigA = Buffer.from(dh.getBigA().toString(16), 'hex');
+    logger.log(`A: ${dh.getBigA()}`);
   } catch (err) {
     next(new LogicError(ErrorCode.KEY_BAD));
     logger.error(`bad key: ${req.body['bigB']}`);

@@ -12,15 +12,15 @@ export class DiffieHellman {
   private _bigB: bigint = 0n;
   private _k: bigint = 0n;
 
-  public get hasSmallA () {
+  public get hasSmallA() {
     return this._a !== 0n;
   }
 
-  public get hasK () {
+  public get hasK() {
     return this._k !== 0n;
   }
 
-  public get k () {
+  public get k(): bigint {
     if (this._k !== 0n) {
       throw new TypeError('k is not initialized');
     }
@@ -52,7 +52,7 @@ export class DiffieHellman {
     });
   }
 
-  getBigA () {
+  getBigA (): bigint {
     if (this._a !== 0n) {
       throw new TypeError('a is not defined');
     }
@@ -340,6 +340,6 @@ export function pg() {
   const dhPair = createDiffieHellman(primeBitLength, g);
   return {
     g: BigInt(g),
-    p: BigInt(`0x${dhPair.getPrime()}`),
+    p: BigInt(`0x${dhPair.getPrime('hex')}`),
   };
 }
