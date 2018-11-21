@@ -97,7 +97,7 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
     logger.log(`A: ${dh.getBigA()}`);
   } catch (err) {
     next(new LogicError(ErrorCode.KEY_BAD));
-    logger.error(`bad key: ${req.body['bigB']}`);
+    logger.error(`${err};;; bad key: ${req.body['bigB']}`);
     return;
   }
 

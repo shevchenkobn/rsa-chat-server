@@ -79,7 +79,7 @@ exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res,
     }
     catch (err) {
         next(new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_BAD));
-        logger_service_1.logger.error(`bad key: ${req.body['bigB']}`);
+        logger_service_1.logger.error(`${err};;; bad key: ${req.body['bigB']}`);
         return;
     }
     if (key_manager_service_1.keyExpiration.has(req.user.name)) {
