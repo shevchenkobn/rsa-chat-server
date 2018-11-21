@@ -63,7 +63,8 @@ router.get('/key', ...authMiddlewares, (async (req, res, next) => {
   req.user.updateDiffieHellman(new DiffieHellman(pg.p, pg.g));
 
   res.json({
-    p: bufferEnsureLE(Buffer.from(pg.p.toString(16), 'hex')).toString('base64'),
+    // p: bufferEnsureLE(Buffer.from(pg.p.toString(16), 'hex')).toString('base64'),
+    p: pg.p.toString(),
     g: Number(pg.g),
   });
 }) as Handler);

@@ -14,7 +14,7 @@ exports.keyConfig = {
                 },
                 p: {
                     type: 'string',
-                    format: 'base64',
+                    format: 'utf8',
                 },
             },
         },
@@ -22,13 +22,13 @@ exports.keyConfig = {
             request: {
                 bigB: {
                     type: 'string',
-                    format: 'base64',
+                    format: 'utf8',
                 },
             },
             response: {
                 bigA: {
                     type: 'string',
-                    format: 'base64',
+                    format: 'utf8',
                 },
             },
         },

@@ -8,7 +8,6 @@ const config_1 = require("../config/config");
 const logger_service_1 = require("../services/logger.service");
 const key_manager_service_1 = require("../services/key-manager.service");
 const diffie_hellman_service_1 = require("../services/diffie-hellman.service");
-const helper_service_1 = require("../services/helper.service");
 exports.router = express_1.Router();
 /**
  * Ping
@@ -48,7 +47,8 @@ exports.router.get('/key', ...auth_service_1.authMiddlewares, (async (req, res, 
     const pg = diffie_hellman_service_1.pg();
     req.user.updateDiffieHellman(new diffie_hellman_service_1.DiffieHellman(pg.p, pg.g));
     res.json({
-        p: helper_service_1.bufferEnsureLE(Buffer.from(pg.p.toString(16), 'hex')).toString('base64'),
+        // p: bufferEnsureLE(Buffer.from(pg.p.toString(16), 'hex')).toString('base64'),
+        p: pg.p.toString(),
         g: Number(pg.g),
     });
 }));

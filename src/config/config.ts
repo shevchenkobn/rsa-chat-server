@@ -13,7 +13,7 @@ export const keyConfig = {
         },
         p: {
           type: 'string',
-          format: 'base64',
+          format: 'utf8',
         },
       },
     },
@@ -21,13 +21,13 @@ export const keyConfig = {
       request: {
         bigB: {
           type: 'string',
-          format: 'base64',
+          format: 'utf8',
         },
       },
       response: {
         bigA: {
           type: 'string',
-          format: 'base64',
+          format: 'utf8',
         },
       },
     },
