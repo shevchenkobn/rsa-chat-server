@@ -8,7 +8,6 @@ const config_1 = require("../config/config");
 const logger_service_1 = require("../services/logger.service");
 const key_manager_service_1 = require("../services/key-manager.service");
 const diffie_hellman_service_1 = require("../services/diffie-hellman.service");
-const helper_service_1 = require("../services/helper.service");
 exports.router = express_1.Router();
 /**
  * Ping
@@ -89,7 +88,7 @@ exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res,
         logger_service_1.logger.log('Had keys, deleting');
     }
     logger_service_1.logger.log(`K: ${dh.k}`);
-    const key = key_manager_service_1.normalizeKey(helper_service_1.bufferEnsureLE(Buffer.from(dh.k.toString(16), 'hex')));
+    const key = key_manager_service_1.normalizeKey(Buffer.from(dh.k.toString(16), 'hex'));
     logger_service_1.logger.log(`key: ${key.join(',')}`);
     req.user.updateKeys(key, key);
     key_manager_service_1.keyExpiration.schedule(req.user.name);

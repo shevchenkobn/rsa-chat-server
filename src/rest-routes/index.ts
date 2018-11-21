@@ -109,7 +109,7 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
   }
 
   logger.log(`K: ${dh.k}`);
-  const key = normalizeKey(bufferEnsureLE(Buffer.from(dh.k.toString(16), 'hex')));
+  const key = normalizeKey(Buffer.from(dh.k.toString(16), 'hex'));
   logger.log(`key: ${key.join(',')}`);
 
   req.user.updateKeys(key, key);
