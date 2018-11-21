@@ -26,7 +26,7 @@ class DiffieHellman {
         return this._k !== 0n;
     }
     get k() {
-        if (this._k !== 0n) {
+        if (this._k === 0n) {
             throw new TypeError('k is not initialized');
         }
         return this._k;
@@ -45,7 +45,7 @@ class DiffieHellman {
         });
     }
     getBigA() {
-        if (this._a !== 0n) {
+        if (this._a === 0n) {
             throw new TypeError('a is not defined');
         }
         if (!this._bigA) {
