@@ -76,12 +76,12 @@ function modPow(base, exponent, modulus) {
     let e = exponent;
     let b = base;
     let result = 1n;
-    while (exponent > 0n) {
-        if ((exponent & 1n) === 1n) {
-            result = (result * base) % modulus;
+    while (e > 0n) {
+        if ((e & 1n) === 1n) {
+            result = (result * b) % modulus;
         }
         e >>= 1n;
-        b = (base * base) % modulus;
+        b = (b * b) % modulus;
     }
     return result;
 }
