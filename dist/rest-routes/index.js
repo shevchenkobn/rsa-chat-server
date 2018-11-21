@@ -69,8 +69,8 @@ exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res,
         const dh = req.user.diffieHellman;
         await dh.generateSmallA();
         dh.generateK(bigB);
-        bigA = dh.getBigA();
-        logger_service_1.logger.log(`A: ${bigA}`);
+        bigA = Buffer.from(dh.getBigA().toString(16), 'hex');
+        logger_service_1.logger.log(`A: ${dh.getBigA()}`);
     }
     catch (err) {
         next(new errors_service_1.LogicError(errors_service_1.ErrorCode.KEY_BAD));

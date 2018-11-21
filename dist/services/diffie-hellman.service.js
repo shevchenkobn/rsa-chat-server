@@ -279,7 +279,7 @@ function pg() {
     const dhPair = crypto_2.createDiffieHellman(primeBitLength, g);
     return {
         g: BigInt(g),
-        p: BigInt(`0x${dhPair.getPrime()}`),
+        p: BigInt(`0x${dhPair.getPrime('hex')}`),
     };
 }
 exports.pg = pg;
