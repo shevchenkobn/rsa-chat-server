@@ -21,8 +21,21 @@ async function getKey(size = config_1.keyConfig.size) {
     });
 }
 exports.getKey = getKey;
-function getNormalizedKey(key) {
-    return key.map((b) => b % 10);
+function getNormalizedKey(key, crop = false) {
+    let newKey;
+    if (crop) {
+        let i = 0;
+        for (; i < key.length && key[i] === 0; i++)
+            ;
+        let j = key.length - 1;
+        for (; j >= 0 && key[j] === 0; j--)
+            ;
+        newKey = key.slice(i, j + 1);
+    }
+    else {
+        newKey = key;
+    }
+    return newKey.map((b) => b % 10);
 }
 exports.getNormalizedKey = getNormalizedKey;
 function normalizeKey(key) {

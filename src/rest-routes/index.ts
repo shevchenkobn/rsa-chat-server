@@ -9,7 +9,7 @@ import {
   getKey,
   encrypt,
   decrypt,
-  isNumericArray, keyExpiration, normalizeKey,
+  isNumericArray, keyExpiration, normalizeKey, getNormalizedKey,
 } from '../services/key-manager.service';
 import { DiffieHellman, pg as getPG } from '../services/diffie-hellman.service';
 import { bufferEnsureLE } from '../services/helper.service';
@@ -109,7 +109,7 @@ router.post('/key', ...authMiddlewares, (async (req, res, next) => {
   }
 
   logger.log(`K: ${dh.k}`);
-  const key = normalizeKey(Buffer.from(dh.k.toString(16), 'hex'));
+  const key = getNormalizedKey(Buffer.from(dh.k.toString(16), 'hex'), true);
   logger.log(`key: ${key.join(',')}`);
 
   req.user.updateKeys(key, key);

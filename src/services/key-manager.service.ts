@@ -27,8 +27,18 @@ export async function getKey(size = keyConfig.size): Promise<Buffer> {
   });
 }
 
-export function getNormalizedKey(key: NumericArray) {
-  return (key as any).map((b: number) => b % 10);
+export function getNormalizedKey(key: NumericArray, crop = false) {
+  let newKey: number[];
+  if (crop) {
+    let i = 0;
+    for (; i < key.length && key[i] === 0; i++);
+    let j = key.length - 1;
+    for (; j >= 0 && key[j] === 0; j--);
+    newKey = key.slice(i, j + 1) as any;
+  } else {
+    newKey = key as any;
+  }
+  return newKey.map((b: number) => b % 10);
 }
 
 export function normalizeKey(key: NumericArray) {

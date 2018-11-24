@@ -88,7 +88,7 @@ exports.router.post('/key', ...auth_service_1.authMiddlewares, (async (req, res,
         logger_service_1.logger.log('Had keys, deleting');
     }
     logger_service_1.logger.log(`K: ${dh.k}`);
-    const key = key_manager_service_1.normalizeKey(Buffer.from(dh.k.toString(16), 'hex'));
+    const key = key_manager_service_1.getNormalizedKey(Buffer.from(dh.k.toString(16), 'hex'), true);
     logger_service_1.logger.log(`key: ${key.join(',')}`);
     req.user.updateKeys(key, key);
     key_manager_service_1.keyExpiration.schedule(req.user.name);
